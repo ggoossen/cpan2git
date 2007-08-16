@@ -1,0 +1,192 @@
+#/usr/bin/perl -w
+
+use strict;
+use warnings;
+
+use Scriptalicious;
+
+use File::Find;
+use YAML ();
+use Cwd;
+use Tty::Warn;
+use DateTime;
+use CPAN::DistnameInfo;
+
+my $opt_package;
+my $force_import;
+my $force_git_push;
+my $no_ignore_errors;
+getopt("package=s", \$opt_package,
+       "force_import", \$force_import,
+       "force_git_push", \$force_git_push,
+       "no_ignore_errors", \$no_ignore_errors,
+      );
+
+my @files;
+
+find( sub { m/^(.*)[.]tar[.]gz$/ and push @files, [$_, $File::Find::dir, $1]; }, "cpan/authors/" );
+
+my $curdir = cwd;
+
+my %packages;
+
+my @invalid_files = qw|XML-Clean-1.010101 perl-Tk-800.023-bin-0-arm-linux GD-3DBarGrapher-0.9.2
+                       perl-cross-arm-5.8.0 Crypt-Serpent-0.01 5.003_07-2.U AFS-Monitor-0.3.1
+                       AI-NeuralNet-SOM-0.01 AI-NeuralNet-SOM-0.02
+                       AlarmCall-1.1 Allegro-0.02_0-ppm-MSWin32-x86-multi-thread-5.6
+                       Allegro-0.02_0-ppm-MSWin32-x86-multi-thread-5.8 Apache-AuthCookiePAM-1.01
+                       App-GUI-Notepad-0.04 App-REPL-0.01
+                       |;
+
+for (@files) {
+    my ($filename, $dir, $basename) = @$_;
+    next if grep { $_ eq $basename } @invalid_files;
+
+    $dir =~ m#([^/]*)$# or die;
+    my $author = $1;
+    my $mtime = (stat("$dir/$filename"))[9];
+
+    my $dni = CPAN::DistnameInfo->new("$dir/$filename");
+    my $name = $dni->dist;
+    my $version = $dni->version;
+    my $distvname = $dni->distvname;
+
+    push @{$packages{$name} ||= [] }, { version => $version,
+                                        name => $name,
+                                        distvname => $distvname,
+                                        dir => $dir,
+                                        basename => $basename,
+                                        mtime => $mtime,
+                                        author => $author,
+                                      };
+}
+
+my @package_names = sort keys %packages;
+
+$opt_package and @package_names = ($opt_package);
+
+my @failed_modules;
+for my $pack_name (@package_names) {
+    my $pack = $packages{$pack_name} or barf "'$pack_name' does not exist";
+    my $prev_version = undef;
+    for my $module (sort { $a->{'mtime'} <=> $b->{'mtime'} } @$pack) {
+        mutter "package: '$module->{distvname}'";
+        chdir $curdir or die $!;
+        if (-e "tmp") {
+            run("chmod -R +rwx tmp");
+            run("rm -rf tmp");
+        }
+
+        eval {
+            git_import($module, $prev_version);
+            $prev_version = $module->{distvname};
+        };
+        if ($@) {
+            warn;
+            push @failed_modules, $module->{distvname};
+            $no_ignore_errors and die "Failed importing '$module->{distvname}'";
+            last; # next package
+        }
+    }
+}
+say "Failed modules:\n" . (join "\n", @failed_modules) if @failed_modules;
+
+
+sub extract {
+    my ($dir, $basename, $prev_version) = @_;
+
+    die if $basename =~ m/Win32-Filnames-0.01/;
+
+    my $ext = (-e "$dir/$basename.tar.gz") ? "tar.gz"
+      : (-e "$dir/$basename.tgz") ? "tgz"
+      : (-e "$dir/$basename.zip") ? "zip"
+      : '';
+
+    if (not $ext) {
+        die "archive not found $dir/$basename. cwd:" . cwd;
+    }
+
+    mkdir "tmp" or die $!;
+    chdir "tmp" or die $!;
+    if ($ext eq "zip") {
+        run("unzip", "-q", "$curdir/$dir/$basename.$ext");
+    } else {
+        run("tar", "-xz", "-f", "$curdir/$dir/$basename.$ext");
+    }
+    chdir $curdir or die $!;
+}
+
+sub git_import {
+    my ($module, $prev_version) = @_;
+
+    my $dir = $module->{dir};
+    my $basename = $module->{basename};
+    my $name = $module->{name} or die "No name";
+    my $distvname = $module->{distvname};
+    my $mtime = DateTime->from_epoch( epoch => $module->{mtime} );
+    defined $distvname or die "No distvname";
+
+    run("mkdir -p cpan-repos/$module->{name}");
+    chdir ("cpan-repos/$module->{name}") or die;
+
+    if (not -e ".git") {
+        run("git init-db");
+    }
+    if (not $force_import and not run_err("git tag -l ^" . quotemeta("$distvname") . '$')) {
+        mutter "Module '$distvname' already imported";
+        return;
+    }
+
+    # setup remote
+    run_err("git-remote", "add", "origin", "ssh://kurila\@dev.tty.nl/home/kurila/git-repos/cpan/$name/");
+    if ( run_err("git-remote", "show", "origin") ) {
+        run(qq|ssh kurila\@dev.tty.nl 'mkdir "git-repos/cpan/$module->{name}" ;|
+            . qq|cd "git-repos/cpan/$module->{name}" ; git-init-db '|);
+        run_err("git-remote", "show", "origin") and barf "Failed setting up remote for '$module->{name}'";
+    }
+
+
+    # reset to previous version or start from start from scatch.
+    run_err("rm .git/refs/heads/master"); # and die;
+    if (defined $prev_version) {
+        run("git reset --hard $prev_version");
+    }
+
+    chdir($curdir) or die;
+    extract($dir, $basename, $prev_version);
+    chdir("cpan-repos/$module->{name}/") or die;
+
+    # update-index to extracted files.
+    run("chmod +rwx * ; rm -rf *");
+    run("find $curdir/tmp/ -type d -exec chmod u+rx {} \\;"); # directories without access permissions ?!
+    (my $slashedname = $name) =~ s#-#/#g;
+    my ($srcdir) = grep { -d $_ } map { "$curdir/tmp/$_/" } ("$basename", "$name", "$slashedname");
+    if (! $srcdir) {
+        for my $try (glob("$curdir/tmp/$name*/"), glob("$curdir/tmp/*/"), "$curdir/tmp/") {
+            if (grep { -e "$try/$_" } qw|MANIFEST Makefile.PL makefile.pl|) {
+                $srcdir = $try;
+                last;
+            }
+        }
+    }
+    $srcdir or barf "Source of '$basename' not extracted?!";
+    run("find $srcdir -type d -empty -delete"); # remove empty directories, because git doesn't like them ?!
+    run("mv $srcdir/* ./");
+    run("git-add *");
+
+    # make commit and tag.
+    my $forceflag = $force_git_push ? "-f" : "";
+    $ENV{GIT_AUTHOR_DATE} = $ENV{GIT_COMMITTER_DATE} = $mtime->datetime;
+    $ENV{GIT_AUTHOR_NAME} = $ENV{GIT_COMMITTER_NAME} = "$module->{author}";
+    $ENV{GIT_AUTHOR_EMAIL} = $ENV{GIT_COMMITTER_EMAIL} = "$module->{author}\@cpan.org";
+    unless (run_err("git-status") == 256) { # status is 256 when nothing hash changed.
+        run("git commit -a -m '$distvname'");
+    }
+    run("git tag $forceflag -m '$distvname' -a '$distvname' ");
+    run("git-gc --prune");
+    run("git push $forceflag --tags");
+    run("git push $forceflag origin HEAD:refs/heads/master");
+
+    chdir($curdir) or die;
+}
+
