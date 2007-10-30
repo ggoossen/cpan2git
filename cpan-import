@@ -8,7 +8,6 @@ use Scriptalicious;
 use File::Find;
 use YAML ();
 use Cwd;
-use Tty::Warn;
 use DateTime;
 use CPAN::DistnameInfo;
 
