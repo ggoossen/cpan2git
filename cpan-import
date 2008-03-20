@@ -383,7 +383,7 @@ sub git_import {
     if (not -e ".git") {
         run("git init-db");
     }
-    if (not $force_import and not run_err("git tag -l ^" . quotemeta("$distvname") . '$')) {
+    if (not $force_import and not run_err("git rev-parse " . quotemeta("$distvname"))) {
         mutter "Module '$distvname' already imported";
         return;
     }
