@@ -329,8 +329,11 @@ for my $pack_name (@package_names) {
         }
 
         eval {
+            local $SIG{ALRM} = sub { die "alarm\n" };
+            alarm 15*60;
             git_import($module, $prev_version);
             $prev_version = $module->{distvname};
+            alarm 0;
         };
         if ($@) {
             warn;
@@ -377,6 +380,8 @@ sub git_import {
     my $mtime = DateTime->from_epoch( epoch => $module->{mtime} );
     defined $distvname or die "No distvname";
 
+    $name =~ m/[.][.]/ and barf "Security: Module with .. in the name ?!";
+
     run("mkdir -p cpan-repos/$module->{name}");
     chdir ("cpan-repos/$module->{name}") or die;
 
@@ -409,7 +414,7 @@ sub git_import {
 
     # update-index to extracted files.
     run("chmod +rwx * ; rm -rf *");
-    run("find $curdir/tmp/ -type d -exec chmod u+rx {} \\;"); # directories without access permissions ?!
+    run("find", "$curdir/tmp/", '-type', 'd', qw|-exec chmod u+rx {} ;|); # directories without access permissions ?!
     (my $slashedname = $name) =~ s#-#/#g;
     my ($srcdir) = grep { -d $_ } map { "$curdir/tmp/$_/" } ("$basename", "$name", "$slashedname");
     if (! $srcdir) {
@@ -421,9 +426,10 @@ sub git_import {
         }
     }
     $srcdir or barf "Source of '$basename' not extracted?!";
-    run("find $srcdir -type d -empty -delete"); # remove empty directories, because git doesn't like them ?!
-    run("mv $srcdir/* ./");
-    run("git-add *");
+    $srcdir !~ m/[.][.]|\s/ or barf "Invalid sourcedir ('$srcdir') contain '..' or whitespace";
+    run("find", "$srcdir", qw|-type d -empty -delete|); # remove empty directories, because git doesn't like them ?!
+    run("mv", glob("$srcdir/*"), "./");
+    run("git-add", glob("*"));
 
     # make commit and tag.
     my $forceflag = $force_git_push ? "-f" : "";
@@ -435,8 +441,8 @@ sub git_import {
     }
     run("git tag $forceflag -m '$distvname' -a '$distvname' ");
     run("git-gc --prune");
-    run("git push $forceflag --tags");
-    run("git push $forceflag origin HEAD:refs/heads/master");
+    system("git push $forceflag --tags") == 0 or die "Failed pusing tag: $!";
+    system("git push $forceflag origin HEAD:refs/heads/master") == 0 or die "Failed pushing HEAD: $!";
 
     chdir($curdir) or die;
 }
