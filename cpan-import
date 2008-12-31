@@ -11,6 +11,8 @@ use Cwd;
 use DateTime;
 use CPAN::DistnameInfo;
 
+$ENV{GIT_PAGER} = "";
+
 my $opt_package;
 my $force_import;
 my $force_git_push;
@@ -380,7 +382,8 @@ sub git_import {
     my $mtime = DateTime->from_epoch( epoch => $module->{mtime} );
     defined $distvname or die "No distvname";
 
-    $name =~ m/[.][.]/ and barf "Security: Module with .. in the name ?!";
+    $name =~ m/^\w[\w-]*/ or barf "Security: Invalid module name $name";
+    $distvname =~ m/^\w[\w-]*/ or barf "Security: Invalid module distvname $distvname";
 
     run("mkdir -p cpan-repos/$module->{name}");
     chdir ("cpan-repos/$module->{name}") or die;
@@ -388,7 +391,7 @@ sub git_import {
     if (not -e ".git") {
         run("git init-db");
     }
-    if (not $force_import and not run_err("git rev-parse " . quotemeta("$distvname"))) {
+    if (not $force_import and not run_err("git rev-parse -q --verify " . quotemeta("$distvname"))) {
         mutter "Module '$distvname' already imported";
         return;
     }
@@ -400,7 +403,12 @@ sub git_import {
             . qq|cd "git-repos/cpan/$module->{name}" ; git-init-db '|);
         run_err("git-remote", "show", "origin") and barf "Failed setting up remote for '$module->{name}'";
     }
-
+    run_err("git-remote", "add", "origin-srcttynl", "ssh://src.tty.nl/usr/local/git/cpan/$name/");
+    if ( run_err("git-remote", "show", "origin-srcttynl") ) {
+        run(qq|ssh src.tty.nl 'mkdir -p "/usr/local/git/cpan/$module->{name}" ;|
+            . qq|cd "/usr/local/git/cpan/$module->{name}" ; git-init-db '|);
+        run_err("git-remote", "show", "origin-srcttynl") and barf "Failed setting up remote for '$module->{name}'";
+    }
 
     # reset to previous version or start from start from scatch.
     run_err("rm .git/refs/heads/master"); # and die;
@@ -442,7 +450,9 @@ sub git_import {
     run("git tag $forceflag -m '$distvname' -a '$distvname' ");
     run("git-gc --prune");
     system("git push $forceflag --tags") == 0 or die "Failed pusing tag: $!";
+    system("git push $forceflag --tags origin-srcttynl") == 0 or die "Failed pusing tag: $!";
     system("git push $forceflag origin HEAD:refs/heads/master") == 0 or die "Failed pushing HEAD: $!";
+    system("git push $forceflag origin-srcttynl HEAD:refs/heads/master") == 0 or die "Failed pushing HEAD: $!";
 
     chdir($curdir) or die;
 }
