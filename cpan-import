@@ -37,7 +37,7 @@ my @invalid_files = qw|XML-Clean-1.010101 perl-Tk-800.023-bin-0-arm-linux GD-3DB
                        AlarmCall-1.1 Allegro-0.02_0-ppm-MSWin32-x86-multi-thread-5.6
                        Allegro-0.02_0-ppm-MSWin32-x86-multi-thread-5.8 Apache-AuthCookiePAM-1.01
                        App-GUI-Notepad-0.04 App-REPL-0.01
-DBI-1.45-5.8.4
+DBI-1.45-5.8.4 SOAP-Lite-0.70_07
                        |;
 
 my @invalid_files_unknown = qw|
@@ -318,10 +318,17 @@ my @package_names = sort keys %packages;
 
 $opt_package and @package_names = ($opt_package);
 
+local $SIG{ALRM} = sub { die "alarm\n" };
+my $timeout = 15 * 60;
+
 my @failed_modules;
 for my $pack_name (@package_names) {
+
     my $pack = $packages{$pack_name} or barf "'$pack_name' does not exist";
     my $prev_version = undef;
+
+    $pack_name =~ m/^\w[\w-]*/ or next; # skip invalid package names.
+
     for my $module (sort { $a->{'mtime'} <=> $b->{'mtime'} } @$pack) {
         mutter "package: '$module->{distvname}'";
         chdir $curdir or die $!;
@@ -331,8 +338,7 @@ for my $pack_name (@package_names) {
         }
 
         eval {
-            local $SIG{ALRM} = sub { die "alarm\n" };
-            alarm 15*60;
+            alarm $timeout;
             git_import($module, $prev_version);
             $prev_version = $module->{distvname};
             alarm 0;
@@ -344,6 +350,18 @@ for my $pack_name (@package_names) {
             last; # next package
         }
     }
+
+    eval {
+        alarm $timeout;
+        chdir($curdir) or die;
+        chdir("cpan-repos/$pack_name/") or die;
+        git_push_module($pack_name);
+        alarm 0;
+    };
+    if ($@) {
+        warn;
+    }
+
 }
 say "Failed modules:\n" . (join "\n", @failed_modules) if @failed_modules;
 
@@ -396,24 +414,10 @@ sub git_import {
         return;
     }
 
-    # setup remote
-    run_err("git-remote", "add", "origin", "ssh://kurila\@dev.tty.nl/home/kurila/git-repos/cpan/$name/");
-    if ( run_err("git-remote", "show", "origin") ) {
-        run(qq|ssh kurila\@dev.tty.nl 'mkdir "git-repos/cpan/$module->{name}" ;|
-            . qq|cd "git-repos/cpan/$module->{name}" ; git-init-db '|);
-        run_err("git-remote", "show", "origin") and barf "Failed setting up remote for '$module->{name}'";
-    }
-    run_err("git-remote", "add", "origin-srcttynl", "ssh://src.tty.nl/usr/local/git/cpan/$name/");
-    if ( run_err("git-remote", "show", "origin-srcttynl") ) {
-        run(qq|ssh src.tty.nl 'mkdir -p "/usr/local/git/cpan/$module->{name}" ;|
-            . qq|cd "/usr/local/git/cpan/$module->{name}" ; git-init-db '|);
-        run_err("git-remote", "show", "origin-srcttynl") and barf "Failed setting up remote for '$module->{name}'";
-    }
-
     # reset to previous version or start from start from scatch.
     run_err("rm .git/refs/heads/master"); # and die;
     if (defined $prev_version) {
-        run("git reset --hard $prev_version");
+        run("git checkout -q $prev_version");
     }
 
     chdir($curdir) or die;
@@ -448,12 +452,32 @@ sub git_import {
         run("git commit -a -m '$distvname'");
     }
     run("git tag $forceflag -m '$distvname' -a '$distvname' ");
-    run("git-gc --prune");
-    system("git push $forceflag --tags") == 0 or die "Failed pusing tag: $!";
-    system("git push $forceflag --tags origin-srcttynl") == 0 or die "Failed pusing tag: $!";
-    system("git push $forceflag origin HEAD:refs/heads/master") == 0 or die "Failed pushing HEAD: $!";
-    system("git push $forceflag origin-srcttynl HEAD:refs/heads/master") == 0 or die "Failed pushing HEAD: $!";
+
+    git_push_module($name);
 
     chdir($curdir) or die;
+}
+
+sub git_push_module {
+    my $name = shift;
+
+    # setup remote
+    run_err("git-remote", "add", "origin", "ssh://kurila\@dev.tty.nl/home/kurila/git-repos/cpan/$name/");
+    if ( run_err("git-remote", "show", "origin") ) {
+        run(qq|ssh kurila\@dev.tty.nl 'mkdir "git-repos/cpan/$name" ;|
+            . qq|cd "git-repos/cpan/$name" ; git-init-db '|);
+        run_err("git-remote", "show", "origin") and barf "Failed setting up remote for '$name'";
+    }
+    run_err("git-remote", "add", "origin-srcttynl", "ssh://src.tty.nl/usr/local/git/cpan/$name/");
+    if ( run_err("git-remote", "show", "origin-srcttynl") ) {
+        run(qq|ssh src.tty.nl 'mkdir -p "/usr/local/git/cpan/$name" ;|
+            . qq|cd "/usr/local/git/cpan/$name" ; git-init-db '|);
+        run_err("git-remote", "show", "origin-srcttynl") and barf "Failed setting up remote for '$name'";
+    }
+
+    my $forceflag = $force_git_push ? "-f" : "";
+    run("git-gc --prune");
+    system("git push $forceflag --tags origin-srcttynl") == 0 or die "Failed pusing tag: $!";
+    system("git push $forceflag origin-srcttynl HEAD:refs/heads/master") == 0 or die "Failed pushing HEAD: $!";
 }
 
