@@ -1,4 +1,4 @@
-#/usr/bin/perl -w
+#/usr/bin/perl
 
 use strict;
 use warnings;
@@ -10,6 +10,7 @@ use YAML ();
 use Cwd;
 use DateTime;
 use CPAN::DistnameInfo;
+use File::Path;
 
 $ENV{GIT_PAGER} = "";
 
@@ -41,6 +42,7 @@ DBI-1.45-5.8.4 SOAP-Lite-0.70_07
                        |;
 
 my @invalid_files_unknown = qw|
+AI-Genetic-Pro-0.18
 Attribute-Unimplemented-0.01
 Audio-Wav-0.03
 BMERC-utils
@@ -351,16 +353,16 @@ for my $pack_name (@package_names) {
         }
     }
 
-    eval {
-        alarm $timeout;
-        chdir($curdir) or die;
-        chdir("cpan-repos/$pack_name/") or die;
-        git_push_module($pack_name);
-        alarm 0;
-    };
-    if ($@) {
-        warn;
-    }
+#     eval {
+#         alarm $timeout;
+#         chdir($curdir) or die;
+#         chdir("cpan-repos/$pack_name/") or die;
+#         git_push_module($pack_name);
+#         alarm 0;
+#     };
+#     if ($@) {
+#         warn;
+#     }
 
 }
 say "Failed modules:\n" . (join "\n", @failed_modules) if @failed_modules;
@@ -400,8 +402,8 @@ sub git_import {
     my $mtime = DateTime->from_epoch( epoch => $module->{mtime} );
     defined $distvname or die "No distvname";
 
-    $name =~ m/^\w[\w-]*/ or barf "Security: Invalid module name $name";
-    $distvname =~ m/^\w[\w-]*/ or barf "Security: Invalid module distvname $distvname";
+    $name =~ m/^\w[\w-]*$/ or barf "Security: Invalid module name $name";
+    $distvname =~ m/^\w[\w.-]*$/ or barf "Security: Invalid module distvname $distvname";
 
     run("mkdir -p cpan-repos/$module->{name}");
     chdir ("cpan-repos/$module->{name}") or die;
@@ -425,8 +427,9 @@ sub git_import {
     chdir("cpan-repos/$module->{name}/") or die;
 
     # update-index to extracted files.
-    run("chmod +rwx * ; rm -rf *");
-    run("find", "$curdir/tmp/", '-type', 'd', qw|-exec chmod u+rx {} ;|); # directories without access permissions ?!
+#     run("chmod", "+rwx", grep { m{^[.][.]?$ } } glob("*"), glob(".*"));
+#     run("rm", "-rf", glob("*"));
+#     run("find", "$curdir/tmp/", '-type', 'd', qw|-exec chmod u+rx {} ;|); # directories without access permissions ?!
     (my $slashedname = $name) =~ s#-#/#g;
     my ($srcdir) = grep { -d $_ } map { "$curdir/tmp/$_/" } ("$basename", "$name", "$slashedname");
     if (! $srcdir) {
@@ -439,16 +442,17 @@ sub git_import {
     }
     $srcdir or barf "Source of '$basename' not extracted?!";
     $srcdir !~ m/[.][.]|\s/ or barf "Invalid sourcedir ('$srcdir') contain '..' or whitespace";
-    run("find", "$srcdir", qw|-type d -empty -delete|); # remove empty directories, because git doesn't like them ?!
-    run("mv", glob("$srcdir/*"), "./");
-    run("git-add", glob("*"));
+
+    chdir($srcdir) or barf("failed chdir");
+    run("ln", "-s", "$curdir/cpan-repos/$module->{name}/.git");
+    run("git", "add", "./");
 
     # make commit and tag.
     my $forceflag = $force_git_push ? "-f" : "";
     $ENV{GIT_AUTHOR_DATE} = $ENV{GIT_COMMITTER_DATE} = $mtime->datetime;
     $ENV{GIT_AUTHOR_NAME} = $ENV{GIT_COMMITTER_NAME} = "$module->{author}";
     $ENV{GIT_AUTHOR_EMAIL} = $ENV{GIT_COMMITTER_EMAIL} = "$module->{author}\@cpan.org";
-    unless (run_err("git-status") == 256) { # status is 256 when nothing hash changed.
+    unless (run_err("git status") == 256) { # status is 256 when nothing hash changed.
         run("git commit -a -m '$distvname'");
     }
     run("git tag $forceflag -m '$distvname' -a '$distvname' ");
@@ -462,21 +466,21 @@ sub git_push_module {
     my $name = shift;
 
     # setup remote
-    run_err("git-remote", "add", "origin", "ssh://kurila\@dev.tty.nl/home/kurila/git-repos/cpan/$name/");
-    if ( run_err("git-remote", "show", "origin") ) {
+    run_err("git", "remote", "add", "origin", "ssh://kurila\@dev.tty.nl/home/kurila/git-repos/cpan/$name/");
+    if ( run_err("git", "remote", "show", "origin") ) {
         run(qq|ssh kurila\@dev.tty.nl 'mkdir "git-repos/cpan/$name" ;|
-            . qq|cd "git-repos/cpan/$name" ; git-init-db '|);
-        run_err("git-remote", "show", "origin") and barf "Failed setting up remote for '$name'";
+            . qq|cd "git-repos/cpan/$name" ; git init-db '|);
+        run_err("git", "remote", "show", "origin") and barf "Failed setting up remote for '$name'";
     }
-    run_err("git-remote", "add", "origin-srcttynl", "ssh://src.tty.nl/usr/local/git/cpan/$name/");
-    if ( run_err("git-remote", "show", "origin-srcttynl") ) {
+    run_err("git", "remote", "add", "origin-srcttynl", "ssh://src.tty.nl/usr/local/git/cpan/$name/");
+    if ( run_err("git", "remote", "show", "origin-srcttynl") ) {
         run(qq|ssh src.tty.nl 'mkdir -p "/usr/local/git/cpan/$name" ;|
             . qq|cd "/usr/local/git/cpan/$name" ; git-init-db '|);
-        run_err("git-remote", "show", "origin-srcttynl") and barf "Failed setting up remote for '$name'";
+        run_err("git", "remote", "show", "origin-srcttynl") and barf "Failed setting up remote for '$name'";
     }
 
     my $forceflag = $force_git_push ? "-f" : "";
-    run("git-gc --prune");
+    run("git", "gc", "--prune");
     system("git push $forceflag --tags origin-srcttynl") == 0 or die "Failed pusing tag: $!";
     system("git push $forceflag origin-srcttynl HEAD:refs/heads/master") == 0 or die "Failed pushing HEAD: $!";
 }
