@@ -466,9 +466,9 @@ sub git_push_module {
     my $name = shift;
 
     # setup remote
-    run_err("git", "remote", "add", "origin", "ssh://kurila\@dev.tty.nl/home/kurila/git-repos/cpan/$name/");
+    run_err("git", "remote", "add", "origin", "ssh://kurila\@wiles.tty.nl/home/kurila/git-repos/cpan/$name/");
     if ( run_err("git", "remote", "show", "origin") ) {
-        run(qq|ssh kurila\@dev.tty.nl 'mkdir "git-repos/cpan/$name" ;|
+        run(qq|ssh kurila\@wiles.tty.nl 'mkdir "git-repos/cpan/$name" ;|
             . qq|cd "git-repos/cpan/$name" ; git init-db '|);
         run_err("git", "remote", "show", "origin") and barf "Failed setting up remote for '$name'";
     }
