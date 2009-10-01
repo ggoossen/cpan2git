@@ -1,0 +1,107 @@
+0&&<<''; # this PGP-signed message is also valid perl
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+# CHECKSUMS file written on Sat Aug 15 01:16:57 2009 GMT by CPAN::Checksums (v2.00)
+$cksum = {
+  'Decision-Markov-0.02.tar.gz' => {
+    'md5' => '7e62e3551c147a575642c1948c8f8324',
+    'md5-ungz' => 'e4a4259572b3bcd625f5b073ca450be8',
+    'mtime' => '2002-09-30',
+    'sha256' => 'bf10754c54fbdf897bbad1d17d2c3a59ba6ca730994976e57a977c6b46e25132',
+    'sha256-ungz' => '716f62fea9cda21256e4dcd5df9b55ead908ebc96b44551dcfd6512ce8ec1da9',
+    'size' => '8154'
+  },
+  'Decision-Markov-0.03a.meta' => {
+    'md5' => '3d3b45870337cb3f153fd562337a552f',
+    'mtime' => '2004-09-07',
+    'sha256' => 'ef77c32c1a21d979ed64958cebb4f4d10a31382f2aebd44a1a6657c88d5a07b5',
+    'size' => '301'
+  },
+  'Decision-Markov-0.03a.tar.gz' => {
+    'md5' => '62698e2a0198291d5a52c3dfc1e7bb6b',
+    'md5-ungz' => 'f42bc028e7957aff41a56a9a237cb1ce',
+    'mtime' => '2004-10-05',
+    'sha256' => 'ab7cc605169461a326b100c041d3ddd48767d3928686ab422b974e3ed118b625',
+    'sha256-ungz' => '068d5d668c3361826092924870a81747e83da413916a2b743b0f745f09ed9041',
+    'size' => '8025'
+  },
+  'Locale-PO-0.16.meta' => {
+    'md5' => '07fa8f79360ad7ff2fc1ea2e432ab719',
+    'mtime' => '2005-10-17',
+    'sha256' => '7032bda97f09d9b8d2ef5d8747621caf2a0a7d2f5f2096a6fa2c4ba17d2e7ff6',
+    'size' => '365'
+  },
+  'Locale-PO-0.16.tar.gz' => {
+    'md5' => '3fa1aefb38e0972f9351bf801e268acd',
+    'md5-ungz' => 'a74d1cc66aaa56c31b9295ec189bb0d7',
+    'mtime' => '2005-11-08',
+    'sha256' => '45fbf3446804a7ff6f6872d865ce5629172787ba849fa19375f50d51ced22366',
+    'sha256-ungz' => 'e947a10362370616a31968cd21af2496ed7d94c68f971cb9e52ecdc9f8104ccf',
+    'size' => '15353'
+  },
+  'Locale-PO-0.17.meta' => {
+    'md5' => '806c1e5a3c3d754251ea650b619c91fc',
+    'mtime' => '2007-05-22',
+    'sha256' => '818c6fb4f1130ea420dc2810f44b34cb2373d6ce3f601c77fd6b100a0541a950',
+    'size' => '368'
+  },
+  'Locale-PO-0.17.tar.gz' => {
+    'md5' => 'c3ba74e5c95a2a817dc9c0bf80100d49',
+    'md5-ungz' => '3d0a5dfc8e772f75452a18ff3a8dec6f',
+    'mtime' => '2007-05-22',
+    'sha256' => 'e9e9042649435673574ffaf376a46c45e69a4bb26887985a1d525f9d4eaa4731',
+    'sha256-ungz' => '53c215a7e5c5f3d66ab7021c3bbc9e00a81d37553671651d30aa388c2d4d2c8a',
+    'size' => '15501'
+  },
+  'Plucene-Plugin-Analyzer-MetaphoneAnalyzer-1.0.meta' => {
+    'md5' => 'aada3f2b8965cdc049b10306a7adef6f',
+    'mtime' => '2006-04-15',
+    'sha256' => '671aec189b27b73ea810f25474cf2fb9fdb9896497a2ad3dca731ac1cd88ce2f',
+    'size' => '402'
+  },
+  'Plucene-Plugin-Analyzer-MetaphoneAnalyzer-1.0.tar.gz' => {
+    'md5' => '4d2ab76d78cf0749607ce6cf3d46ced2',
+    'md5-ungz' => 'b0ffe16bf76f780cebe24fe091d3e079',
+    'mtime' => '2006-04-15',
+    'sha256' => 'a4b40eea61e31db5b69edccb62064613c7f61e7a358e46cdc07960cf010f0fe9',
+    'sha256-ungz' => 'edb65f5a2a6d7692621bf5b280728f9f5a0a01a51bf4faf71409408c85b5a697',
+    'size' => '2565'
+  },
+  'Plucene-Plugin-Analyzer-MetaphoneAnalyzer-1.01.meta' => {
+    'md5' => '62a11b9860978b15f1f983f0bff09304',
+    'mtime' => '2006-04-15',
+    'sha256' => 'db0d8d15ec63e2622d7b2806cb12b2bff07cca66f4ce42b3895edd2d9b18635f',
+    'size' => '364'
+  },
+  'Plucene-Plugin-Analyzer-MetaphoneAnalyzer-1.01.tar.gz' => {
+    'md5' => 'c343279dd4c6c8b2834d4f61304536b3',
+    'md5-ungz' => '8157f5278c662e91e27de91cdd6b0a48',
+    'mtime' => '2007-08-12',
+    'sha256' => 'd46fee87c33d5d2e9b5101670a3a89f3553023ff0d582795ac3d84c7eac1337b',
+    'sha256-ungz' => 'cc86000bfb90d7236710f1771278f4e4b3c629a9b8c67cee8250b6fc99283e29',
+    'size' => '8482'
+  },
+  'Plucene-Plugin-Analyzer-MetaphoneAnalyzer-1.02.meta' => {
+    'md5' => '62a11b9860978b15f1f983f0bff09304',
+    'mtime' => '2006-04-15',
+    'sha256' => 'db0d8d15ec63e2622d7b2806cb12b2bff07cca66f4ce42b3895edd2d9b18635f',
+    'size' => '364'
+  },
+  'Plucene-Plugin-Analyzer-MetaphoneAnalyzer-1.02.tar.gz' => {
+    'md5' => '816e5164b602ddd0d9d9a03fe96f9307',
+    'md5-ungz' => '1c88c3a68167fca912a78610f478d498',
+    'mtime' => '2007-08-14',
+    'sha256' => '2a5c676001b260d9c35dc4403da237a45aaae1b434643a1fafe016268fe9f4f1',
+    'sha256-ungz' => 'bb0033c89d3d209f027c89ee3c575ed950716dad4b8ea62c4026fd47bbebd276',
+    'size' => '9404'
+  }
+};
+__END__
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQFKhgyJMo2oZ0UPiewRAtSBAJ9yP4/xHOfkiNzoHf8AQZtRiC+DbACeIEo0
+rcLDCpRrPTRlb48Rh0VDhTE=
+=Ua0o
+-----END PGP SIGNATURE-----

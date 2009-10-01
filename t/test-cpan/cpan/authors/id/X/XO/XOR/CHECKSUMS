@@ -1,0 +1,29 @@
+0&&<<''; # this PGP-signed message is also valid perl
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+# CHECKSUMS file written on Tue Nov 11 08:34:21 2008 GMT by CPAN::Checksums (v2.00)
+$cksum = {
+  'Module-DynamicSubModule-0.01.meta' => {
+    'md5' => '7ec75520d2b24271d22885efd087f913',
+    'mtime' => '2007-11-10',
+    'sha256' => '83457e9b2fd4dfe8da7409a0abdcc373e08140176e6a3f162b3ca9ff9d50ff03',
+    'size' => '333'
+  },
+  'Module-DynamicSubModule-0.01.tar.gz' => {
+    'md5' => 'd8cc7655debfd0e8e12ea8aae6d81df8',
+    'md5-ungz' => 'e1bedb9996f9099d1424a7eb4964b71a',
+    'mtime' => '2007-11-10',
+    'sha256' => '3ec2a2fbeb9d8e3fe4193b55d9e72dab26eafceeebd44ccaad7213d3621bdfda',
+    'sha256-ungz' => '9528c34038e817319da6b9fd3ca1fa49ee84c98f7481304712695dde0e1c487c',
+    'size' => '3355'
+  }
+};
+__END__
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQFJGUONMo2oZ0UPiewRAgBJAJwOJ/adDM43R1dSV0BxDj/SWNyHUwCfV4ye
+h7CjlvHSlrEji1z6JDKeY3Y=
+=bm0b
+-----END PGP SIGNATURE-----
