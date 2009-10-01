@@ -169,7 +169,7 @@ sub extract_to_repos {
     my $dist_repos_dir = $self->dist_repos_dir($distname);
 
     my $ae = Archive::Extract->new( archive => $dist->{filename} );
-    my $extract_dir = tempdir();
+    my $extract_dir = tempdir( CLEANUP => 1 );
     $ae->extract( to => $extract_dir );
 
     my $dir;
