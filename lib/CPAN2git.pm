@@ -13,7 +13,7 @@ use Archive::Extract;
 use File::Temp qw(tempdir);
 
 sub new {
-    my ($class, %args) = @_;
+    my ( $class, %args ) = @_;
 
     my $cpan_dir = $args{cpan_dir};
     -e $cpan_dir or confess("cpan_dir '$cpan_dir' does not exists");
@@ -49,15 +49,22 @@ sub _dist_infos_no_cache {
     my $cpan_dir = $self->cpan_dir;
 
     my @dist_infos;
-    find( sub {
-              return if not -f;
-              my $filename = File::Spec->rel2abs($_);
-              my $mtime = (stat($filename))[9];
-              push( @dist_infos, { filename => $filename,
-                                    distname_info => CPAN::DistnameInfo->new($filename),
-                                    mtime => $mtime,
-                               } );
-          }, "$cpan_dir/authors" );
+    find(
+        sub {
+            return if not -f;
+            my $filename = File::Spec->rel2abs($_);
+            my $mtime    = ( stat($filename) )[9];
+            push(
+                @dist_infos,
+                {
+                    filename      => $filename,
+                    distname_info => CPAN::DistnameInfo->new($filename),
+                    mtime         => $mtime,
+                }
+            );
+        },
+        "$cpan_dir/authors"
+    );
 
     @dist_infos = grep { defined $_->{distname_info}->dist } @dist_infos;
 
@@ -72,45 +79,45 @@ sub dist_names {
 }
 
 sub ordered_dist_infos_by_distname {
-    my ($self, $distname) = @_;
+    my ( $self, $distname ) = @_;
     my @dist_infos =
       sort { $a->{mtime} <=> $b->{mtime} }
-      grep { $_->{distname_info}->dist eq $distname }
-      $self->dist_infos;
+      grep { $_->{distname_info}->dist eq $distname } $self->dist_infos;
 
     return @dist_infos;
 }
 
 sub dist_repos_dir {
-    my ($self, $distname) = @_;
+    my ( $self, $distname ) = @_;
     return $self->repos_dir . "/$distname";
 }
 
 sub dist_has_repository {
-    my ($self, $distname) = @_;
+    my ( $self, $distname ) = @_;
     return -e $self->dist_repos_dir($distname) . "/.git";
 }
 
 sub create_dist_repository {
-    my ($self, $distname) = @_;
+    my ( $self, $distname ) = @_;
 
-    mkpath($self->dist_repos_dir($distname));
+    mkpath( $self->dist_repos_dir($distname) );
 
-    run("git", "--git-dir" => $self->dist_repos_dir($distname) . "/.git", "init");
+    run( "git", "--git-dir" => $self->dist_repos_dir($distname) . "/.git", "init" );
 
     return;
 }
 
 sub dist_tagname {
-    my ($self, $dist) = @_;
+    my ( $self, $dist ) = @_;
     return $dist->{distname_info}->dist . "-" . $dist->{distname_info}->version;
 }
 
 sub has_gitrev_by_dist {
-    my ($self, $dist) = @_;
+    my ( $self, $dist ) = @_;
 
     my $distname = $dist->{distname_info}->dist;
-    my $err = run_err("git",
+    my $err      = run_err(
+        "git",
         "--git_dir" => $self->dist_repos_dir($distname),
         "rev-parse",
         "-q",
@@ -122,16 +129,17 @@ sub has_gitrev_by_dist {
 }
 
 sub repos_checkout_dist {
-    my ($self, $dist, $distname) = @_;
+    my ( $self, $dist, $distname ) = @_;
     my $dist_repos_dir = $self->dist_repos_dir($distname);
-    if (not $dist) {
+    if ( not $dist ) {
         my $head_ref = "$dist_repos_dir/.git/refs/heads/master";
-        if (-e $head_ref ) {
+        if ( -e $head_ref ) {
             unlink("$dist_repos_dir/.git/refs/heads/master") or confess("Failed unlink: $!");
         }
     }
     else {
-        run("git",
+        run(
+            "git",
             "--git-dir" => "$dist_repos_dir/.git",
             "checkout",
             "-q",
@@ -143,18 +151,18 @@ sub repos_checkout_dist {
 }
 
 sub clean_repos_dir {
-    my ($self, $dist) = @_;
+    my ( $self, $dist ) = @_;
 
-    my $distname = $dist->{distname_info}->dist;
+    my $distname       = $dist->{distname_info}->dist;
     my $dist_repos_dir = $self->dist_repos_dir($distname);
 
-    opendir(my $x, $dist_repos_dir) or confess("failed openddir: $!");
+    opendir( my $x, $dist_repos_dir ) or confess("failed openddir: $!");
     my @to_be_deleted_files = grep { $_ !~ m/^[.](|[.]|git)$/ } readdir($x);
 
     for (@to_be_deleted_files) {
         my $full_filename = "$dist_repos_dir/$_";
         rmtree($full_filename);
-        if (-e $full_filename) {
+        if ( -e $full_filename ) {
             confess("'$full_filename' was not removed");
         }
     }
@@ -163,9 +171,9 @@ sub clean_repos_dir {
 }
 
 sub extract_to_repos {
-    my ($self, $dist) = @_;
+    my ( $self, $dist ) = @_;
 
-    my $distname = $dist->{distname_info}->dist;
+    my $distname       = $dist->{distname_info}->dist;
     my $dist_repos_dir = $self->dist_repos_dir($distname);
 
     my $ae = Archive::Extract->new( archive => $dist->{filename} );
@@ -174,49 +182,45 @@ sub extract_to_repos {
 
     my $dir;
     {
+
         # Stolen from CPANPLUS
         for my $try (
             File::Spec->rel2abs(
                 File::Spec->catdir( $ae->extract_path, $dist->{distname_info}->distvname )
-                                ) ,
+            ),
             File::Spec->rel2abs( $ae->extract_path ),
-        ) {
-            ($dir = $try) && last if -d $try;
+          )
+        {
+            ( $dir = $try ) && last if -d $try;
         }
     }
 
-    opendir(my $x, $dir) or confess("failed openddir: $!");
+    opendir( my $x, $dir ) or confess("failed openddir: $!");
     my @to_be_moved_files = grep { $_ !~ m/^[.](|[.]|git)$/ } readdir($x);
 
     for my $filename (@to_be_moved_files) {
-        run("mv", "$dir/$filename", "$dist_repos_dir/$filename");
+        run( "mv", "$dir/$filename", "$dist_repos_dir/$filename" );
     }
 
     return;
 }
 
 sub commit_to_repos {
-    my ($self, $dist) = @_;
+    my ( $self, $dist ) = @_;
 
-    my $distname = $dist->{distname_info}->dist;
+    my $distname       = $dist->{distname_info}->dist;
     my $dist_repos_dir = $self->dist_repos_dir($distname);
 
     my $dist_versioned_name = $dist->{distname_info}->distvname;
 
     chdir("$dist_repos_dir") or confess("Failed chaning to repos dir: $!");
 
-    run("git",
-        "add",
-        "--force",
-        "--all",
-        "./");
+    run( "git", "add", "--force", "--all", "./" );
 
-    run("git",
-        "commit",
-        "-m" => $dist_versioned_name,
-    );
+    run( "git", "commit", "-m" => $dist_versioned_name, );
 
-    run("git",
+    run(
+        "git",
         "tag",
         "-m" => $dist_versioned_name,
         "-a" => $dist_versioned_name,
@@ -226,11 +230,11 @@ sub commit_to_repos {
 }
 
 sub update_dist {
-    my ($self, $distname) = @_;
+    my ( $self, $distname ) = @_;
 
     my @dist_infos = $self->ordered_dist_infos_by_distname($distname);
 
-    if (not $self->dist_has_repository($distname) ) {
+    if ( not $self->dist_has_repository($distname) ) {
         $self->create_dist_repository($distname);
     }
 
@@ -238,9 +242,9 @@ sub update_dist {
     for my $dist_info (@dist_infos) {
         next if $self->has_gitrev_by_dist($dist_info);
         $self->repos_checkout_dist( $prev_dist_info, $distname );
-        $self->clean_repos_dir( $dist_info );
-        $self->extract_to_repos( $dist_info );
-        $self->commit_to_repos( $dist_info );
+        $self->clean_repos_dir($dist_info);
+        $self->extract_to_repos($dist_info);
+        $self->commit_to_repos($dist_info);
     }
     continue {
         $prev_dist_info = $dist_info;
@@ -252,7 +256,7 @@ sub update_dist {
 sub update_all {
     my ($self) = @_;
 
-    for ($self->dist_names) {
+    for ( $self->dist_names ) {
         $self->update_dist($_);
     }
 

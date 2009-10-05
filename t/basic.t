@@ -19,17 +19,17 @@ my $cpan_dir = cwd() . "/t/test-cpan/cpan";
     my $module_name = "Plucene-Plugin-Analyzer-MetaphoneAnalyzer";
 
     my @dist_infos = $cpan2git->dist_infos();
-    my @x = sort { $a->{distname_info}->version <=>  $b->{distname_info}->version }
-                grep { $_->{distname_info}->dist eq $module_name } @dist_infos;
-    is(scalar(@x), 3);
+    my @x = sort { $a->{distname_info}->version <=> $b->{distname_info}->version }
+      grep { $_->{distname_info}->dist eq $module_name } @dist_infos;
+    is( scalar(@x), 3 );
     my $x0 = $x[0];
-    is( $x0->{distname_info}->dist, $module_name);
-    is( $x0->{distname_info}->version, '1.0');
-    is( $x0->{mtime}, 1145080578);
+    is( $x0->{distname_info}->dist,    $module_name );
+    is( $x0->{distname_info}->version, '1.0' );
+    is( $x0->{mtime},                  1145080578 );
     my $x1 = $x[1];
-    is( $x1->{distname_info}->dist, $module_name);
-    is( $x1->{distname_info}->version, '1.01');
-    is( $x1->{mtime}, 1186900275);
+    is( $x1->{distname_info}->dist,    $module_name );
+    is( $x1->{distname_info}->version, '1.01' );
+    is( $x1->{mtime},                  1186900275 );
 }
 
 {
@@ -38,7 +38,13 @@ my $cpan_dir = cwd() . "/t/test-cpan/cpan";
     my $module_name = "Plucene-Plugin-Analyzer-MetaphoneAnalyzer";
 
     my @dist_names = $cpan2git->dist_names();
-    is_deeply( [sort @dist_names], [sort qw[GitIgnore-Test Locale-PO Decision-Markov Module-DynamicSubModule Plucene-Plugin-Analyzer-MetaphoneAnalyzer]] );
+    is_deeply(
+        [ sort @dist_names ],
+        [
+            sort
+              qw[GitIgnore-Test Locale-PO Decision-Markov Module-DynamicSubModule Plucene-Plugin-Analyzer-MetaphoneAnalyzer]
+        ]
+    );
 }
 
 {
@@ -46,14 +52,12 @@ my $cpan_dir = cwd() . "/t/test-cpan/cpan";
     my $cpan2git = CPAN2git->new( cpan_dir => $cpan_dir, repos_dir => $repos_dir );
     my $module_name = "Plucene-Plugin-Analyzer-MetaphoneAnalyzer";
 
-    my @ordered_dist = $cpan2git->ordered_dist_infos_by_distname( $module_name );
-    is_deeply( [map { $_->{distname_info}->version } @ordered_dist],
-               [qw[1.0 1.01 1.02]] );
+    my @ordered_dist = $cpan2git->ordered_dist_infos_by_distname($module_name);
+    is_deeply( [ map { $_->{distname_info}->version } @ordered_dist ], [qw[1.0 1.01 1.02]] );
 
-    my @tagnames = map { $cpan2git->dist_tagname( $_ ) } @ordered_dist;
+    my @tagnames = map { $cpan2git->dist_tagname($_) } @ordered_dist;
 
-    is_deeply( [@tagnames],
-               ["$module_name-1.0", "$module_name-1.01", "$module_name-1.02"] );
+    is_deeply( [@tagnames], [ "$module_name-1.0", "$module_name-1.01", "$module_name-1.02" ] );
 }
 
 {
@@ -62,11 +66,11 @@ my $cpan_dir = cwd() . "/t/test-cpan/cpan";
     my $module_name = "Plucene-Plugin-Analyzer-MetaphoneAnalyzer";
 
     my $distname = $module_name;
-    ok( not $cpan2git->dist_has_repository( $distname ) );
-    $cpan2git->create_dist_repository( $distname );
-    ok( $cpan2git->dist_has_repository( $distname ) );
+    ok( not $cpan2git->dist_has_repository($distname) );
+    $cpan2git->create_dist_repository($distname);
+    ok( $cpan2git->dist_has_repository($distname) );
 
-    ok( -d "$repos_dir/$module_name");
+    ok( -d "$repos_dir/$module_name" );
     ok( -d "$repos_dir/$module_name/.git", "$module_name has .git directory" );
 }
 
@@ -103,13 +107,13 @@ sub check_plucene_plugin_etc_1_0 {
 100644 blob 7052ad612628c4896bdb38b8345afcb992b531ed	lib/Plucene/Plugin/Analyzer/MetaphoneFilter.pm
 100644 blob 2b547bc529d32ee4e2df4bdbf33c317ee9c66df8	t/Plucene-Plugin-Analyzer-MetaphoneAnalyzer.t
 EOT
-    is(git_parent_sha("refs/tags/$module_name-1.0"), '');
+    is( git_parent_sha("refs/tags/$module_name-1.0"), '' );
 }
 
 sub check_plucene_plugin_etc_1_01 {
     my $module_name = "Plucene-Plugin-Analyzer-MetaphoneAnalyzer";
 
-    my $parent_sha = git_parent_sha("refs/tags/$module_name-1.01");
+    my $parent_sha   = git_parent_sha("refs/tags/$module_name-1.01");
     my $expected_sha = git_commit_sha("refs/tags/$module_name-1.0");
     is( $parent_sha, $expected_sha );
 
@@ -131,31 +135,25 @@ EOT
     my $module_name = "Plucene-Plugin-Analyzer-MetaphoneAnalyzer";
 
     my $new_cpan_dir = tempdir( CLEANUP => 1 );
-    my $repos_dir = tempdir( CLEANUP => 1 );
+    my $repos_dir    = tempdir( CLEANUP => 1 );
 
-    mkpath($new_cpan_dir . "/authors");
+    mkpath( $new_cpan_dir . "/authors" );
 
     my $cpan2git = CPAN2git->new( cpan_dir => $new_cpan_dir, repos_dir => $repos_dir );
     $cpan2git->update_all();
 
-    is(`ls $repos_dir`, '');
+    is( `ls $repos_dir`, '' );
     my $alansz_dir = "/authors/id/A/AL/ALANSZ/";
-    mkpath($new_cpan_dir . $alansz_dir);
-    run("cp",
-        "-a",
-        "$cpan_dir/$alansz_dir/$module_name-1.0.tar.gz",
-        "$new_cpan_dir/$alansz_dir/"
-    );
+    mkpath( $new_cpan_dir . $alansz_dir );
+    run( "cp", "-a", "$cpan_dir/$alansz_dir/$module_name-1.0.tar.gz",
+        "$new_cpan_dir/$alansz_dir/" );
 
     $cpan2git->update_all();
 
     check_plucene_plugin_etc_1_0();
 
-    run("cp",
-        "-a",
-        "$cpan_dir/$alansz_dir/$module_name-1.01.tar.gz",
-        "$new_cpan_dir/$alansz_dir/"
-    );
+    run( "cp", "-a", "$cpan_dir/$alansz_dir/$module_name-1.01.tar.gz",
+        "$new_cpan_dir/$alansz_dir/" );
 
     $cpan2git->update_all();
 
@@ -169,7 +167,7 @@ EOT
     $cpan2git->update_all();
 
     my $module_name = "GitIgnore-Test";
-    my $distrepos = $cpan2git->dist_repos_dir($module_name);
+    my $distrepos   = $cpan2git->dist_repos_dir($module_name);
 
     chdir("$distrepos");
 
