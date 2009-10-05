@@ -91,6 +91,8 @@ sub check_plucene_plugin_etc_1_0 {
 100644 blob 2b547bc529d32ee4e2df4bdbf33c317ee9c66df8	t/Plucene-Plugin-Analyzer-MetaphoneAnalyzer.t
 EOT
     is( git_parent_sha($tag), '', "first distribution has no parent" );
+    is( git_commit_subject($tag), "release $module_name-1.0" );
+    is( git_commit_body($tag), "cpan2git import of release $module_name-1.0" );
     is( git_author_name($tag), 'Alan Schwartz' );
     is( git_author_email($tag), 'alansz@uic.edu' );
     is( git_author_date($tag), 'Sat, 15 Apr 2006 05:56:18 +0000' );
@@ -98,6 +100,15 @@ EOT
     is( git_committer_email($tag), 'cpan2git@localhost');
     ok( DateTime->now()->subtract_datetime( DateTime->from_epoch( epoch => git_committer_date_unix_timestamp($tag) ) )->minutes() < 2,
       "commit is done less than 2 minutes ago" );
+
+    like( `git cat-file -p $tag`, qr/
+                                        object[ ]\S+ \n
+                                        type[ ]commit \n
+                                        tag[ ]$module_name-1.0 \n
+                                        tagger[ ]CPAN2git[ ]$CPAN2git::VERSION \s <cpan2git\@localhost> \s .+ \n
+                                        \n
+                                        cpan2git[ ]tag[ ]of[ ]release[ ]$module_name-1.0
+                                    /x );
 }
 
 sub check_plucene_plugin_etc_1_01 {

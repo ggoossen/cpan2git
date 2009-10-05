@@ -11,7 +11,7 @@ use DateTime::Format::Mail ();
 use File::Find;
 use File::Path qw(mkpath rmtree);
 use File::Spec;
-use File::Temp qw(tempdir);
+use File::Temp qw(tempdir tempfile);
 use List::MoreUtils qw(uniq);
 use Parse::CPAN::Whois ();
 use Scriptalicious;
@@ -268,15 +268,14 @@ sub commit_to_repos {
     $ENV{GIT_COMMITTER_NAME} = 'CPAN2git ' . $VERSION;
     $ENV{GIT_COMMITTER_EMAIL} = 'cpan2git@localhost';
 
-    run( "git", "commit", "-m" => $dist_versioned_name, );
+    run( "git", "commit", "-m" => "release $dist_versioned_name\n\ncpan2git import of release $dist_versioned_name\n" );
 
     run(
         "git",
         "tag",
-        "-m" => $dist_versioned_name,
+        "-m" => "cpan2git tag of release $dist_versioned_name",
         "-a" => $dist_versioned_name,
     );
-
     return;
 }
 
