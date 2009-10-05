@@ -6,12 +6,18 @@ use warnings;
 use Archive::Extract;
 use CPAN::DistnameInfo;
 use Carp qw(confess);
+use DateTime ();
+use DateTime::Format::Mail ();
 use File::Find;
 use File::Path qw(mkpath rmtree);
 use File::Spec;
 use File::Temp qw(tempdir);
 use List::MoreUtils qw(uniq);
+use Parse::CPAN::Whois ();
 use Scriptalicious;
+use version qw(qv);
+
+our $VERSION = qv('v1.0');
 
 sub new {
     my ( $class, %args ) = @_;
@@ -225,6 +231,22 @@ sub extract_to_repos {
     return;
 }
 
+sub whois {
+    my  ($self) = @_;
+    return $self->{whois} if $self->{whois};
+
+    open( my $fh,  "<", $self->cpan_dir . "/authors/00whois.xml" ) or confess("Could not open whois file: $!");
+    $self->{whois} = Parse::CPAN::Whois->new( $fh );
+
+    return $self->{whois};
+}
+
+sub cpan_whois_author {
+    my ($self, $pause_id) = @_;
+    my $author = $self->whois->author($pause_id) or confess("Could not find author for pause id $pause_id");
+    return $author;
+}
+
 sub commit_to_repos {
     my ( $self, $dist ) = @_;
 
@@ -236,6 +258,15 @@ sub commit_to_repos {
     chdir("$dist_repos_dir") or confess("Failed changing to repos dir: $!");
 
     run( "git", "add", "--force", "--all", "./" );
+
+    my $pause_id = $dist->{distname_info}->cpanid;
+    my $author = $self->cpan_whois_author($pause_id);
+    $ENV{GIT_AUTHOR_NAME} = $author->name || $pause_id;
+    $ENV{GIT_AUTHOR_EMAIL} = $author->email || lc($pause_id) . '@cpan.org';
+    $ENV{GIT_AUTHOR_DATE} = DateTime::Format::Mail->new->format_datetime(
+        DateTime->from_epoch( epoch => $dist->{mtime}, time_zone => 'UTC' ) );
+    $ENV{GIT_COMMITTER_NAME} = 'CPAN2git ' . $VERSION;
+    $ENV{GIT_COMMITTER_EMAIL} = 'cpan2git@localhost';
 
     run( "git", "commit", "-m" => $dist_versioned_name, );
 

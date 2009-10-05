@@ -75,8 +75,9 @@ my $testcpan_dir = cwd() . "/t/test-cpan/cpan";
 
 sub check_plucene_plugin_etc_1_0 {
     my $module_name = "Plucene-Plugin-Analyzer-MetaphoneAnalyzer";
+    my $tag = "refs/tags/$module_name-1.0";
 
-    my $tree_sha = git_tree_sha("refs/tags/$module_name-1.0");
+    my $tree_sha = git_tree_sha($tag);
     chomp($tree_sha);
     is( $tree_sha, "4c37598e6640e7fd299654c88e016df4cbf36187" );
     is( `git ls-tree -r $tree_sha .`, <<'EOT' );
@@ -89,7 +90,14 @@ sub check_plucene_plugin_etc_1_0 {
 100644 blob 7052ad612628c4896bdb38b8345afcb992b531ed	lib/Plucene/Plugin/Analyzer/MetaphoneFilter.pm
 100644 blob 2b547bc529d32ee4e2df4bdbf33c317ee9c66df8	t/Plucene-Plugin-Analyzer-MetaphoneAnalyzer.t
 EOT
-    is( git_parent_sha("refs/tags/$module_name-1.0"), '' );
+    is( git_parent_sha($tag), '', "first distribution has no parent" );
+    is( git_author_name($tag), 'Alan Schwartz' );
+    is( git_author_email($tag), 'alansz@uic.edu' );
+    is( git_author_date($tag), 'Sat, 15 Apr 2006 05:56:18 +0000' );
+    is( git_committer_name($tag), 'CPAN2git ' . $CPAN2git::VERSION );
+    is( git_committer_email($tag), 'cpan2git@localhost');
+    ok( DateTime->now()->subtract_datetime( DateTime->from_epoch( epoch => git_committer_date_unix_timestamp($tag) ) )->minutes() < 2,
+      "commit is done less than 2 minutes ago" );
 }
 
 sub check_plucene_plugin_etc_1_01 {

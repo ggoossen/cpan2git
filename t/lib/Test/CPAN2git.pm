@@ -5,7 +5,9 @@ use warnings;
 
 use base 'Exporter';
 
-our @EXPORT = qw[git_parent_sha git_tree_sha git_commit_sha];
+our @EXPORT = (qw[git_parent_sha git_tree_sha git_commit_sha git_author_name git_author_email git_author_date],
+               qw[git_committer_name git_committer_email git_committer_date_unix_timestamp]);
+
 
 sub _git_format_rev {
     my ($rev, $format) = @_;
@@ -27,6 +29,36 @@ sub git_tree_sha {
 sub git_commit_sha {
     my ($rev) = @_;
     return _git_format_rev($rev, '%H');
+}
+
+sub git_author_name {
+    my ($rev) = @_;
+    return _git_format_rev($rev, '%an');
+}
+
+sub git_author_email {
+    my ($rev) = @_;
+    return _git_format_rev($rev, '%ae');
+}
+
+sub git_author_date {
+    my ($rev) = @_;
+    return _git_format_rev($rev, '%aD');
+}
+
+sub git_committer_name {
+    my ($rev) = @_;
+    return _git_format_rev($rev, '%cn');
+}
+
+sub git_committer_email {
+    my ($rev) = @_;
+    return _git_format_rev($rev, '%ce');
+}
+
+sub git_committer_date_unix_timestamp {
+    my ($rev) = @_;
+    return _git_format_rev($rev, '%ct');
 }
 
 1;
