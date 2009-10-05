@@ -1,0 +1,57 @@
+Introduction:
+
+cpan2git is a script which allows you to convert perl modules (aka
+distributions) from cpan/backpan to git repositories. cpan2git
+converts a cpan/backpan mirror to a directory with a git repository
+for each cpan module.
+
+Each version of a module is tagged with the string
+"<module-name>-<version-number>".
+
+cpan2git also works incrementally. If a new version of cpan module is
+available, cpan2git will update the corresponding git repository.
+
+Prerequisites:
+
+ * git (version >= 1.5)
+ * perl (version >= 5.8.8)
+ * perl modules
+    * Archive::Extract
+    * CPAN::DistnameInfo
+    * List::MoreUtils
+    * Locale::Maketext::Simple
+    * Module::Load::Conditional
+    * Params::Check
+    * Scriptalicious
+
+How to use to get a complete mirror in git repositories:
+
+1. Setup local cpan/backpan mirror
+   example: 
+     wget --mirror http://backpan.perl.org/
+     mkdir -p /var/lib/cpan2git/
+     mv backpan.perl.org /var/lib/cpan2git/cpan-mirror
+2. Install cpan2git
+   example: git clone git@github.com:ggoossen/cpan2git.git
+3. Create a directory to contain your git repositories.
+   example: mkdir -p /var/lib/cpan2git/repositories
+4. Run cpan2git
+   example: cd cpan2git && ./cpan2git --all --cpan-dir=/var/lib/cpan2git/cpan-mirror --repos-dir=/var/lib/cpan2git/repositories
+
+Keeping your repository up-to-date:
+
+1. Keep cpan mirror up-to-date
+   example: add to crontab:
+     rsync -qa rsync://mirrors3.kernel.org/mirrors/CPAN/ /var/lib/cpan2git/cpan-mirror
+2. Keep repositories up-to-date
+   example: add to crontab:
+     /path/to/cpan2git --all --cpan-dir=/var/lib/cpan2git/cpan-mirror --repos-dir=/var/lib/cpan2git/repositories
+
+Updating a single repository:
+
+1. Keep cpan mirror up-to-date
+   example: add to crontab:
+     rsync -qa rsync://mirrors3.kernel.org/mirrors/CPAN/ /var/lib/cpan2git/cpan-mirror
+2. Update your module:
+   example: /path/to/cpan2git --dist-name=Plucene-Plugin-Analyzer-MetaphoneAnalyzer
+
