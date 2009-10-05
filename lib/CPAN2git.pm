@@ -3,14 +3,15 @@ package CPAN2git;
 use strict;
 use warnings;
 
-use List::MoreUtils qw(uniq);
-use CPAN::DistnameInfo;
-use File::Find;
-use Carp qw(confess);
-use File::Path qw(mkpath rmtree);
-use Scriptalicious;
 use Archive::Extract;
+use CPAN::DistnameInfo;
+use Carp qw(confess);
+use File::Find;
+use File::Path qw(mkpath rmtree);
+use File::Spec;
 use File::Temp qw(tempdir);
+use List::MoreUtils qw(uniq);
+use Scriptalicious;
 
 sub new {
     my ( $class, %args ) = @_;
@@ -54,21 +55,25 @@ sub _dist_infos_no_cache {
             return if not -f;
             my $filename = File::Spec->rel2abs($_);
             my $mtime    = ( stat($filename) )[9];
+            my $distname_info = CPAN::DistnameInfo->new($filename);
+
+            # skip everything which is not a distribution file, e.g. *.meta files
+            return if not $distname_info->dist;
+
+            # skip everything which has not a proper name and might pose a security risk
+            return if not $distname_info->dist =~ m/^[\w\d][\w\d.-]*$/;
+
             push(
                 @dist_infos,
                 {
                     filename      => $filename,
-                    distname_info => CPAN::DistnameInfo->new($filename),
+                    distname_info => $distname_info,
                     mtime         => $mtime,
                 }
             );
         },
         "$cpan_dir/authors"
     );
-
-    @dist_infos = grep { defined $_->{distname_info}->dist } @dist_infos;
-
-    $self->{dist_infos} = @dist_infos;
 
     return @dist_infos;
 }
@@ -128,26 +133,40 @@ sub has_gitrev_by_dist {
     return not $err;
 }
 
-sub repos_checkout_dist {
-    my ( $self, $dist, $distname ) = @_;
+sub repos_set_initial_state {
+    my ($self, $distname) = @_;
+
+    # reseting git to its initial state, i.e. there is no commit done yet,
+    # is done by removing the file containing the current head (which is assumed to be "master").
     my $dist_repos_dir = $self->dist_repos_dir($distname);
-    if ( not $dist ) {
-        my $head_ref = "$dist_repos_dir/.git/refs/heads/master";
-        if ( -e $head_ref ) {
-            unlink("$dist_repos_dir/.git/refs/heads/master") or confess("Failed unlink: $!");
-        }
-    }
-    else {
-        run(
-            "git",
-            "--git-dir" => "$dist_repos_dir/.git",
-            "checkout",
-            "-q",
-            "refs/tags/" . $self->dist_tagname($dist),
-        );
+    my $head_ref = "$dist_repos_dir/.git/refs/heads/master";
+    if ( -e $head_ref ) {
+        unlink("$dist_repos_dir/.git/refs/heads/master") or confess("Failed to unlink: $!");
     }
 
     return;
+}
+
+sub repos_checkout_dist {
+    my ( $self, $dist ) = @_;
+
+    my $dist_repos_dir = $self->dist_repos_dir($dist->{distname_info}->dist);
+    run(
+        "git",
+        "--git-dir" => "$dist_repos_dir/.git",
+        "checkout",
+        "-q",
+        "refs/tags/" . $self->dist_tagname($dist),
+    );
+
+    return;
+}
+
+sub _dir_non_dotgit_files {
+    my ($dir) = @_;
+    opendir( my $dh, $dir ) or confess("failed openddir of '$dir': $!");
+    my @non_git_files = grep { $_ !~ m/^[.](|[.]|git)$/ } readdir($dh);
+    return @non_git_files;
 }
 
 sub clean_repos_dir {
@@ -156,8 +175,7 @@ sub clean_repos_dir {
     my $distname       = $dist->{distname_info}->dist;
     my $dist_repos_dir = $self->dist_repos_dir($distname);
 
-    opendir( my $x, $dist_repos_dir ) or confess("failed openddir: $!");
-    my @to_be_deleted_files = grep { $_ !~ m/^[.](|[.]|git)$/ } readdir($x);
+    my @to_be_deleted_files = _dir_non_dotgit_files($dist_repos_dir);
 
     for (@to_be_deleted_files) {
         my $full_filename = "$dist_repos_dir/$_";
@@ -183,7 +201,7 @@ sub extract_to_repos {
     my $dir;
     {
 
-        # Stolen from CPANPLUS
+        # The try list if taken from CPANPLUS
         for my $try (
             File::Spec->rel2abs(
                 File::Spec->catdir( $ae->extract_path, $dist->{distname_info}->distvname )
@@ -191,12 +209,14 @@ sub extract_to_repos {
             File::Spec->rel2abs( $ae->extract_path ),
           )
         {
-            ( $dir = $try ) && last if -d $try;
+            if (-d $try) {
+                $dir = $try;
+                last;
+            }
         }
     }
 
-    opendir( my $x, $dir ) or confess("failed openddir: $!");
-    my @to_be_moved_files = grep { $_ !~ m/^[.](|[.]|git)$/ } readdir($x);
+    my @to_be_moved_files = _dir_non_dotgit_files($dir);
 
     for my $filename (@to_be_moved_files) {
         run( "mv", "$dir/$filename", "$dist_repos_dir/$filename" );
@@ -213,7 +233,7 @@ sub commit_to_repos {
 
     my $dist_versioned_name = $dist->{distname_info}->distvname;
 
-    chdir("$dist_repos_dir") or confess("Failed chaning to repos dir: $!");
+    chdir("$dist_repos_dir") or confess("Failed changing to repos dir: $!");
 
     run( "git", "add", "--force", "--all", "./" );
 
@@ -241,7 +261,11 @@ sub update_dist {
     my $prev_dist_info;
     for my $dist_info (@dist_infos) {
         next if $self->has_gitrev_by_dist($dist_info);
-        $self->repos_checkout_dist( $prev_dist_info, $distname );
+        if ($prev_dist_info) {
+            $self->repos_checkout_dist( $prev_dist_info );
+        } else {
+            $self->repos_set_initial_state( $distname );
+        }
         $self->clean_repos_dir($dist_info);
         $self->extract_to_repos($dist_info);
         $self->commit_to_repos($dist_info);
