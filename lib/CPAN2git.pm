@@ -369,7 +369,7 @@ sub update_all {
     my ($self) = @_;
 
     for my $dist_name ( $self->dist_names ) {
-        next if any { $dist_name eq $_  } CPAN2git::Constants::SKIP_MODULES;
+        next if any { $dist_name eq $_ } CPAN2git::Constants::SKIP_MODULES();
         $self->update_dist($dist_name);
     }
 

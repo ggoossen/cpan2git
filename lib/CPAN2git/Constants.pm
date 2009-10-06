@@ -3,7 +3,8 @@ package CPAN2git::Constants;
 use strict;
 use warnings;
 
-use constant SKIP_MODULES => [
+sub SKIP_MODULES {
+    return (
     qw|
       AI-Genetic-Pro-0.18
       Attribute-Unimplemented-0.01
@@ -271,7 +272,7 @@ use constant SKIP_MODULES => [
     qw|
       DBIx-Informix-Perform
       |,
-
-];
+    );
+}
 
 1;
