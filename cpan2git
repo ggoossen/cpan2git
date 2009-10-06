@@ -3,6 +3,8 @@
 use strict;
 use warnings;
 
+use lib 'lib';
+
 =head1 NAME
 
 cpan2git - program to convert local cpan mirror to git repositories
