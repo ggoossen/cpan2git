@@ -82,6 +82,36 @@ my $testcpan_dir = cwd() . "/t/test-cpan/cpan";
     check_plucene_plugin_etc_1_01();
 }
 
+{
+    # Check that the same is generated with incrementing and updating a single dist
+    my $module_name = "Plucene-Plugin-Analyzer-MetaphoneAnalyzer";
+
+    my $new_cpan_dir = tempdir( CLEANUP => 1 );
+    my $repos_dir    = tempdir( CLEANUP => 1 );
+
+    mkpath( $new_cpan_dir . "/authors" );
+
+    my $cpan2git = CPAN2git->new( cpan_dir => $new_cpan_dir, repos_dir => $repos_dir );
+    $cpan2git->update_all();
+
+    is( `ls $repos_dir`, '' );
+    my $alansz_dir = "/authors/id/A/AL/ALANSZ/";
+    mkpath( $new_cpan_dir . $alansz_dir );
+    run( "cp", "-a", "$testcpan_dir/$alansz_dir/$module_name-1.0.tar.gz",
+        "$new_cpan_dir/$alansz_dir/" );
+
+    $cpan2git->update_dist("$module_name");
+
+    check_plucene_plugin_etc_1_0();
+
+    run( "cp", "-a", "$testcpan_dir/$alansz_dir/$module_name-1.01.tar.gz",
+        "$new_cpan_dir/$alansz_dir/" );
+
+    $cpan2git->update_all();
+
+    check_plucene_plugin_etc_1_01();
+}
+
 sub check_plucene_plugin_etc_1_0 {
     my $module_name = "Plucene-Plugin-Analyzer-MetaphoneAnalyzer";
     my $tag = "refs/tags/$module_name-1.0";
