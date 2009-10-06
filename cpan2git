@@ -3,6 +3,29 @@
 use strict;
 use warnings;
 
+=head1 NAME
+
+cpan2git - program to convert local cpan mirror to git repositories
+
+=head1 SYNOPSIS
+   
+$ cpan2git --all --cpan-dir=/var/lib/cpan2git/cpan-mirror --repos-dir=/var/lib/cpan2git/repositories
+
+=head1 DESCRIPTION
+
+cpan2git is a script which allows you to convert perl modules (aka
+distributions) from cpan/backpan to git repositories. cpan2git
+converts a cpan/backpan mirror to a directory with a git repository
+for each cpan module.
+
+Each version of a module is tagged with the string
+"<module-name>-<version-number>".
+
+cpan2git also works incrementally. If a new version of cpan module is
+available, cpan2git will update the corresponding git repository.
+
+=cut
+
 use List::MoreUtils qw(any);
 use Carp qw(confess);
 use CPAN2git;
@@ -19,7 +42,7 @@ sub main_dispatch {
     );
 
     ( any { $_ eq $command } keys(%commands) )
-      or confess("Unknown command $command");
+      or confess_usage("Unknown command $command");
 
     $commands{$command}->(%options);
 
@@ -36,7 +59,7 @@ sub get_options {
         "dist-name=s" => \$dist_name
     );
 
-    $result or confess("Invalid arguments: ");
+    $result or confess_usage("Invalid arguments: ");
 
     my @parse_spec = ( {
             var_ref => \$all,
@@ -61,14 +84,14 @@ sub get_options {
 
     for my $spec ( grep { $_->{command} } @parse_spec ) {
         next if not ${ $spec->{var_ref} };
-        $command and confess("Invalid arguments: can't do both $command and $spec->{command}");
+        $command and confess_usage("Invalid arguments: can't do both $command and $spec->{command}");
         $command = $spec->{command};
     }
-    $command or confess("Invalid arguments: no command provided");
+    $command or confess_usage("Invalid arguments: no command provided");
 
     for my $spec ( grep { $_->{option} } @parse_spec ) {
         if ( not defined( ${ $spec->{var_ref} } ) ) {
-            $spec->{required} and confess("Required option $spec->{option} not provided");
+            $spec->{required} and confess_usage("Required option $spec->{option} not provided");
             next;
         }
         $options{ $spec->{option} } = ${ $spec->{var_ref} };
@@ -97,6 +120,29 @@ sub update_single_dist {
         repos_dir => $options{repos_dir},
     );
     $cpan2git->update_dist( $options{dist_name} );
+
+    return;
+}
+
+sub confess_usage {
+    my (@confess_args) = @_;
+
+    print_usage();
+    confess(@confess_args);
+
+    return;
+}
+
+sub print_usage {
+    print <<"EOU";
+usage: cperl2git <option list> <command [arguments]>
+    Where <command> is one of:
+        --all (convert all CPAN distributions to git repositories)
+        --dist-name=<CPAN distribution name> (convert a single distribution)
+    Where <option list> consists of:
+        --cpan-dir=<dir> (required, location of local cpan mirror)
+        --repos-dir=<dir> (required, location of git repositories)
+EOU
 
     return;
 }

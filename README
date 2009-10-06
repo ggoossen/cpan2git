@@ -13,7 +13,7 @@ available, cpan2git will update the corresponding git repository.
 
 Prerequisites:
 
- * git (version >= 1.5)
+ * git (version >= 1.6.3)
  * perl (version >= 5.8.8)
  * perl modules
     * Archive::Extract

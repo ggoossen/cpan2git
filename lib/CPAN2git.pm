@@ -3,6 +3,27 @@ package CPAN2git;
 use strict;
 use warnings;
 
+=head1 NAME
+
+CPAN2git - Library for converting a local cpan/backpan to git repositories.
+
+=head1 DESCRIPTION
+
+CPAN2git is a library for converting a local CPAN/backpan to git repositories.
+It can either update all CPAN distribitons or specific distributions.
+
+=head1 SYNOPSIS
+
+    # initialize cpan2git object
+    my $cpan2git = CPAN2git->new(
+        cpan_dir  => "/var/lib/cpan2git/cpan-mirror",
+        repos_dir => "/var/lib/cpan2git/cpan-repositories",
+    );
+    # convert all CPAN distributions to their corresponding repositories
+    $cpan2git->update_all();
+
+=cut
+
 use Archive::Extract;
 use CPAN::DistnameInfo;
 use Carp qw(confess);
@@ -19,6 +40,18 @@ use version qw(qv);
 
 our $VERSION = qv('v1.0');
 
+=head1 METHODS/SUBROUTINES
+
+=over
+
+=cut
+
+=item new( cpan_dir => $, repos_dir => $ )
+
+Create and configure the object which can later be used to do actual work.
+
+=cut
+
 sub new {
     my ( $class, %args ) = @_;
 
@@ -32,10 +65,22 @@ sub new {
     return $self;
 }
 
+=item repos_dir()
+
+The directory name where the git repositories are
+
+=cut
+
 sub repos_dir {
     my ($self) = @_;
     return $self->{'repos_dir'};
 }
+
+=item cpan_dir()
+
+The directory name of the CPAN mirror
+
+=cut
 
 sub cpan_dir {
     my ($self) = @_;
@@ -279,6 +324,12 @@ sub commit_to_repos {
     return;
 }
 
+=item update_dist( $dist_name )
+
+Update a single distribution to its corresponding git repository.
+
+=cut
+
 sub update_dist {
     my ( $self, $distname ) = @_;
 
@@ -307,6 +358,12 @@ sub update_dist {
     return;
 }
 
+=item update_all()
+
+Update all CPAN distributions to their corresponding git repositories.
+
+=cut
+
 sub update_all {
     my ($self) = @_;
 
@@ -316,5 +373,9 @@ sub update_all {
 
     return;
 }
+
+=back
+
+=cut
 
 1;
