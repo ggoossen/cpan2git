@@ -8,7 +8,7 @@ for each cpan module.
 Each version of a module is tagged with the string
 "<module-name>-<version-number>".
 
-cpan2git also works incrementally. If a new version of cpan module is
+cpan2git also works incrementally. If a new version of a cpan module is
 available, cpan2git will update the corresponding git repository.
 
 Prerequisites:
@@ -53,5 +53,5 @@ Updating a single repository:
    example: add to crontab:
      rsync -qa rsync://mirrors3.kernel.org/mirrors/CPAN/ /var/lib/cpan2git/cpan-mirror
 2. Update your module:
-   example: /path/to/cpan2git --dist-name=Plucene-Plugin-Analyzer-MetaphoneAnalyzer
+   example: /path/to/cpan2git --dist-name=Plucene-Plugin-Analyzer-MetaphoneAnalyzer --cpan-dir=/var/lib/cpan2git/cpan-mirror --repos-dir=/var/lib/cpan2git/repositories
 

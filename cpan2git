@@ -66,6 +66,11 @@ sub get_options {
             command => 'update_all_dists',
         },
         {
+            var_ref => \$dist_name,
+            command => 'update_single_dist',
+            option  => 'dist_name',
+        },
+        {
             var_ref  => \$cpan_dir,
             option   => 'cpan_dir',
             required => 1,
@@ -75,23 +80,24 @@ sub get_options {
             option   => 'repos_dir',
             required => 1,
         },
-        {
-            var_ref => \$dist_name,
-            command => 'update_single_dist',
-            option  => 'dist_name',
-        },
     );
 
     for my $spec ( grep { $_->{command} } @parse_spec ) {
         next if not ${ $spec->{var_ref} };
-        $command and confess_usage("Invalid arguments: can't do both $command and $spec->{command}");
+        if( $command ) {
+            confess_usage("Invalid arguments: can't do both $command and $spec->{command}");
+        }
         $command = $spec->{command};
     }
-    $command or confess_usage("Invalid arguments: no command provided");
+    if( not $command ) {
+        confess_usage("Invalid arguments: no command provided");
+    }
 
     for my $spec ( grep { $_->{option} } @parse_spec ) {
         if ( not defined( ${ $spec->{var_ref} } ) ) {
-            $spec->{required} and confess_usage("Required option $spec->{option} not provided");
+            if( $spec->{required} ) {
+                confess_usage("Required option $spec->{option} not provided");
+            }
             next;
         }
         $options{ $spec->{option} } = ${ $spec->{var_ref} };
@@ -134,7 +140,7 @@ sub confess_usage {
 }
 
 sub print_usage {
-    print <<"EOU";
+    print STDERR <<"EOU";
 usage: cperl2git <option list> <command [arguments]>
     Where <command> is one of:
         --all (convert all CPAN distributions to git repositories)
