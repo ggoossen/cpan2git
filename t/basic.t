@@ -2,14 +2,16 @@
 use strict;
 use warnings;
 
-use Test::More 'no_plan';
-
-use File::Temp qw(tempdir);
-use Scriptalicious;
+use lib 't/lib';
 
 use CPAN2git;
 use Cwd qw(cwd);
 use File::Path qw(mkpath);
+use File::Temp qw(tempdir);
+use File::Touch ();
+use Scriptalicious;
+use Test::CPAN2git qw(set_mtime);
+use Test::More 'no_plan';
 
 # $testcpan_dir referes to a mini CPAN distribution, containing some distributions for testing.
 my $testcpan_dir = cwd() . "/t/test-cpan/cpan";
@@ -19,6 +21,12 @@ my $testcpan_dir = cwd() . "/t/test-cpan/cpan";
     my $repos_dir = tempdir( CLEANUP => 1 );
     my $cpan2git = CPAN2git->new( cpan_dir => $testcpan_dir, repos_dir => $repos_dir );
     my $module_name = "Plucene-Plugin-Analyzer-MetaphoneAnalyzer";
+    my $expected_mtime_1_0 = 1145080578;
+    my $expected_mtime_1_01 = 1186900275;
+    set_mtime("$testcpan_dir/authors/id/A/AL/ALANSZ/$module_name-1.0.tar.gz",
+              $expected_mtime_1_0);
+    set_mtime("$testcpan_dir/authors/id/A/AL/ALANSZ/$module_name-1.01.tar.gz",
+              $expected_mtime_1_01);
 
     my @dist_infos = $cpan2git->dist_infos();
     my @x = sort { $a->{distname_info}->version <=> $b->{distname_info}->version }
@@ -28,12 +36,12 @@ my $testcpan_dir = cwd() . "/t/test-cpan/cpan";
     like( $x0->{filename}, qr/\Q$module_name-1.0.tar.gz\E$/ );
     is( $x0->{distname_info}->dist,    $module_name );
     is( $x0->{distname_info}->version, '1.0' );
-    is( $x0->{mtime},                  1145080578 );
+    is( $x0->{mtime},                  $expected_mtime_1_0 );
     my $x1 = $x[1];
     like( $x1->{filename}, qr/\Q$module_name-1.01.tar.gz\E$/ );
     is( $x1->{distname_info}->dist,    $module_name );
     is( $x1->{distname_info}->version, '1.01' );
-    is( $x1->{mtime},                  1186900275 );
+    is( $x1->{mtime},                  $expected_mtime_1_01 );
 }
 
 {

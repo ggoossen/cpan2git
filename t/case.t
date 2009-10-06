@@ -15,11 +15,12 @@ use lib 't/lib';
 use Test::CPAN2git;
 
 use CPAN2git;
-use File::Temp qw(tempdir);
 use Cwd qw(cwd);
 use File::Path qw(mkpath);
-use Test::More;
+use File::Temp qw(tempdir);
+use File::Touch ();
 use Scriptalicious;
+use Test::More;
 
 plan('no_plan');
 
@@ -30,6 +31,14 @@ my $testcpan_dir = cwd() . "/t/test-cpan/cpan";
     my $repos_dir = tempdir( CLEANUP => 1 );
     my $cpan2git = CPAN2git->new( cpan_dir => $testcpan_dir, repos_dir => $repos_dir );
     my $module_name = "Plucene-Plugin-Analyzer-MetaphoneAnalyzer";
+
+    #  Set up timestamps of test resources (they are set after checkout from github)
+    my $expected_mtime_1_0 = 1145080578;
+    my $expected_mtime_1_01 = 1186900275;
+    set_mtime("$testcpan_dir/authors/id/A/AL/ALANSZ/$module_name-1.0.tar.gz",
+              $expected_mtime_1_0);
+    set_mtime("$testcpan_dir/authors/id/A/AL/ALANSZ/$module_name-1.01.tar.gz",
+              $expected_mtime_1_01);
 
     my $distrepos = $cpan2git->dist_repos_dir($module_name);
 
