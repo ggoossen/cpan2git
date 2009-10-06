@@ -77,7 +77,7 @@ sub get_options {
         },
         {
             var_ref => \$dist_name,
-            command => 'update_dist',
+            command => 'update_single_dist',
             option  => 'dist_name',
         },
     );
