@@ -3,7 +3,7 @@ package CPAN2git::Constants;
 use strict;
 use warnings;
 
-use constant INVALID_MODULES => [
+use constant SKIP_MODULES => [
     qw|
       AI-Genetic-Pro-0.18
       Attribute-Unimplemented-0.01
@@ -267,7 +267,11 @@ use constant INVALID_MODULES => [
       App-REPL-0.01
       DBI-1.45-5.8.4
       SOAP-Lite-0.70_07
-      |
+      |,
+    qw|
+      DBIx-Informix-Perform
+      |,
+
 ];
 
 1;

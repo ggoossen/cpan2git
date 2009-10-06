@@ -26,6 +26,7 @@ It can either update all CPAN distribitons or specific distributions.
 
 use Archive::Extract;
 use CPAN::DistnameInfo;
+use CPAN2git::Constants;
 use Carp qw(confess);
 use DateTime ();
 use DateTime::Format::Mail ();
@@ -33,7 +34,7 @@ use File::Find;
 use File::Path qw(mkpath rmtree);
 use File::Spec;
 use File::Temp qw(tempdir tempfile);
-use List::MoreUtils qw(uniq);
+use List::MoreUtils qw(uniq any);
 use Parse::CPAN::Whois ();
 use Scriptalicious;
 use version qw(qv);
@@ -367,8 +368,9 @@ Update all CPAN distributions to their corresponding git repositories.
 sub update_all {
     my ($self) = @_;
 
-    for ( $self->dist_names ) {
-        $self->update_dist($_);
+    for my $dist_name ( $self->dist_names ) {
+        next if any { $dist_name eq $_  } CPAN2git::Constants::SKIP_MODULES;
+        $self->update_dist($dist_name);
     }
 
     return;
