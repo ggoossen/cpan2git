@@ -52,11 +52,9 @@ my $testcpan_dir = cwd() . "/t/test-cpan/cpan";
     # test "dist_names"
     my $repos_dir = tempdir( CLEANUP => 1 );
     my $cpan2git = CPAN2git->new( cpan_dir => $testcpan_dir, repos_dir => $repos_dir );
-    my $module_name = "Plucene-Plugin-Analyzer-MetaphoneAnalyzer";
-
-    my @dist_names = $cpan2git->dist_names();
+    my @module_names = $cpan2git->dist_names();
     is_deeply(
-        [ sort @dist_names ],
+        [ sort @module_names ],
         [
             sort
               qw[NoDashTest BrokenTarball GitIgnore-Test Locale-PO Decision-Markov Module-DynamicSubModule Plucene-Plugin-Analyzer-MetaphoneAnalyzer]
@@ -74,9 +72,9 @@ my $testcpan_dir = cwd() . "/t/test-cpan/cpan";
     my @ordered_dist = $cpan2git->ordered_dist_infos_by_distname($module_name);
     is_deeply( [ map { $_->{distname_info}->version } @ordered_dist ], [qw[1.0 1.01 1.02]] );
 
-    my @tagnames = map { $cpan2git->dist_tagname($_) } @ordered_dist;
+    my @dist_names = map { $_->{full_distname} } @ordered_dist;
 
-    is_deeply( [@tagnames], [ "$module_name-1.0", "$module_name-1.01", "$module_name-1.02" ] );
+    is_deeply( [@dist_names], [ "$module_name-1.0", "$module_name-1.01", "$module_name-1.02" ] );
 }
 
 {

@@ -3,8 +3,13 @@ package CPAN2git::Constants;
 use strict;
 use warnings;
 
-sub SKIP_MODULES {
+sub DISTS_WITH_NON_READABLE_FILES {
+    return (qw|LWP-UserAgent-ProxyAny-1.02|);
+}
+
+sub SKIP_DISTS {
     return (
+        DISTS_WITH_NON_READABLE_FILES,
     qw|
       AI-Genetic-Pro-0.18
       Attribute-Unimplemented-0.01

@@ -115,12 +115,15 @@ sub _dist_infos_no_cache {
             # skip everything which has not a proper name and might pose a security risk
             return if not $distname_info->dist =~ m/^[\w\d][\w\d.-]*$/;
 
+            my $full_distname = $distname_info->dist . "-" . $distname_info->version;
+
             push(
                 @dist_infos,
                 {
                     filename      => $filename,
                     distname_info => $distname_info,
                     mtime         => $mtime,
+                    full_distname => $full_distname,
                 }
             );
         },
@@ -164,11 +167,6 @@ sub create_dist_repository {
     return;
 }
 
-sub dist_tagname {
-    my ( $self, $dist ) = @_;
-    return $dist->{distname_info}->dist . "-" . $dist->{distname_info}->version;
-}
-
 sub has_gitrev_by_dist {
     my ( $self, $dist ) = @_;
 
@@ -184,7 +182,7 @@ sub has_gitrev_by_dist {
         "rev-parse",
         "-q",
         "--verify",
-        "refs/tags/" . $self->dist_tagname($dist),
+        "refs/tags/$dist->{full_distname}",
     );
     my $err = run_err(@run_err_args);
     if ( $err and ( $err != $no_tag_error_code ) ) {
@@ -221,7 +219,7 @@ sub repos_checkout_dist {
         "--git-dir" => "$dist_repos_dir/.git",
         "reset",
         "--hard",
-        "refs/tags/" . $self->dist_tagname($dist),
+        "refs/tags/$dist->{full_distname}",
     );
 
     return;
@@ -318,7 +316,7 @@ sub commit_to_repos {
     my $distname       = $dist->{distname_info}->dist;
     my $dist_repos_dir = $self->dist_repos_dir($distname);
 
-    my $dist_versioned_name = $distname . "-" . $dist->{distname_info}->version;
+    my $dist_versioned_name = $dist->{full_distname};
 
     chdir("$dist_repos_dir") or confess("Failed changing to repos dir: $!");
 
@@ -379,6 +377,10 @@ sub update_dist {
 
     my $prev_dist_info;
     for my $dist_info (@dist_infos) {
+        if (any { $dist_info->{full_distname} eq $_ } CPAN2git::Constants::SKIP_DISTS()) {
+            say("Skipping dist '$dist_info->{full_distname}'");
+            next;
+        }
         if ($self->has_gitrev_by_dist($dist_info)) {
             $prev_dist_info = $dist_info;
             next;
@@ -399,7 +401,6 @@ sub update_all {
     my ($self) = @_;
 
     for my $dist_name ( $self->dist_names ) {
-        next if any { $dist_name eq $_ } CPAN2git::Constants::SKIP_MODULES();
         $self->update_dist($dist_name);
     }
 
