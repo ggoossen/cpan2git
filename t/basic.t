@@ -59,7 +59,7 @@ my $testcpan_dir = cwd() . "/t/test-cpan/cpan";
         [ sort @dist_names ],
         [
             sort
-              qw[BrokenTarball GitIgnore-Test Locale-PO Decision-Markov Module-DynamicSubModule Plucene-Plugin-Analyzer-MetaphoneAnalyzer]
+              qw[NoDashTest BrokenTarball GitIgnore-Test Locale-PO Decision-Markov Module-DynamicSubModule Plucene-Plugin-Analyzer-MetaphoneAnalyzer]
         ]
     );
 }

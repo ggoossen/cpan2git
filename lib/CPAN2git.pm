@@ -219,8 +219,8 @@ sub repos_checkout_dist {
     run(
         "git",
         "--git-dir" => "$dist_repos_dir/.git",
-        "checkout",
-        "-q",
+        "reset",
+        "--hard",
         "refs/tags/" . $self->dist_tagname($dist),
     );
 
