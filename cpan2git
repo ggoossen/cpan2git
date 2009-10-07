@@ -33,6 +33,8 @@ use Carp qw(confess);
 use CPAN2git;
 use Scriptalicious;
 
+fix_is_space_loading();
+
 main_dispatch();
 
 sub main_dispatch {
@@ -151,6 +153,12 @@ usage: cperl2git <option list> <command [arguments]>
 EOU
 
     return;
+}
+
+sub fix_is_space_loading {
+    # make sure IsSpace is loaded for '\s' to prevent problems with
+    # failing to load it when XML::SAX encounters UTF-8.
+    "x{300}" =~ m/\s/;
 }
 
 1;

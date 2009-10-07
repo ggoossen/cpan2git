@@ -23,6 +23,7 @@ sub DISTS_INSECURE_TARBALL {
     return (qw[
                   Array-Sort-0.02
                   Math-Systems-0.01
+                  Array-Parallel-0.01
               ]);
 }
 
