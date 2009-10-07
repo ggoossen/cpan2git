@@ -31,7 +31,7 @@ available, cpan2git will update the corresponding git repository.
 use List::MoreUtils qw(any);
 use Carp qw(confess);
 use CPAN2git;
-use Getopt::Long;
+use Scriptalicious;
 
 main_dispatch();
 
@@ -54,14 +54,12 @@ sub main_dispatch {
 sub get_options {
     my ( $command, %options );
     my ( $all, $cpan_dir, $repos_dir, $dist_name );
-    my $result = GetOptions(
+    getopt(
         "all"         => \$all,
         "cpan-dir=s"  => \$cpan_dir,
         "repos-dir=s" => \$repos_dir,
         "dist-name=s" => \$dist_name
     );
-
-    $result or confess_usage("Invalid arguments: ");
 
     my @parse_spec = ( {
             var_ref => \$all,

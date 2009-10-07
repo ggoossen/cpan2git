@@ -345,6 +345,8 @@ Update a single distribution to its corresponding git repository.
 sub update_dist {
     my ( $self, $distname ) = @_;
 
+    say("update dist of '$distname'");
+
     my @dist_infos = $self->ordered_dist_infos_by_distname($distname);
 
     if ( not $self->dist_has_repository($distname) ) {
