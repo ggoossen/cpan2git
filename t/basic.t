@@ -17,16 +17,17 @@ use Test::More 'no_plan';
 my $testcpan_dir = cwd() . "/t/test-cpan/cpan";
 
 {
+
     # test of "dist_infos"
     my $repos_dir = tempdir( CLEANUP => 1 );
-    my $cpan2git = CPAN2git->new( cpan_dir => $testcpan_dir, repos_dir => $repos_dir );
-    my $module_name = "Plucene-Plugin-Analyzer-MetaphoneAnalyzer";
-    my $expected_mtime_1_0 = 1145080578;
+    my $cpan2git            = CPAN2git->new( cpan_dir => $testcpan_dir, repos_dir => $repos_dir );
+    my $module_name         = "Plucene-Plugin-Analyzer-MetaphoneAnalyzer";
+    my $expected_mtime_1_0  = 1145080578;
     my $expected_mtime_1_01 = 1186900275;
-    set_mtime("$testcpan_dir/authors/id/A/AL/ALANSZ/$module_name-1.0.tar.gz",
-              $expected_mtime_1_0);
-    set_mtime("$testcpan_dir/authors/id/A/AL/ALANSZ/$module_name-1.01.tar.gz",
-              $expected_mtime_1_01);
+    set_mtime( "$testcpan_dir/authors/id/A/AL/ALANSZ/$module_name-1.0.tar.gz",
+        $expected_mtime_1_0 );
+    set_mtime( "$testcpan_dir/authors/id/A/AL/ALANSZ/$module_name-1.01.tar.gz",
+        $expected_mtime_1_01 );
 
     my @dist_infos = $cpan2git->dist_infos();
     my @x = sort { $a->{distname_info}->version <=> $b->{distname_info}->version }
@@ -45,6 +46,7 @@ my $testcpan_dir = cwd() . "/t/test-cpan/cpan";
 }
 
 {
+
     # test "dist_names"
     my $repos_dir = tempdir( CLEANUP => 1 );
     my $cpan2git = CPAN2git->new( cpan_dir => $testcpan_dir, repos_dir => $repos_dir );
@@ -61,6 +63,7 @@ my $testcpan_dir = cwd() . "/t/test-cpan/cpan";
 }
 
 {
+
     # test of "ordered_dist_infos_by_distname"
     my $repos_dir = tempdir( CLEANUP => 1 );
     my $cpan2git = CPAN2git->new( cpan_dir => $testcpan_dir, repos_dir => $repos_dir );
@@ -75,6 +78,7 @@ my $testcpan_dir = cwd() . "/t/test-cpan/cpan";
 }
 
 {
+
     # test "dist_has_repository" and "create_dist_repository"
     my $repos_dir = tempdir( CLEANUP => 1 );
     my $cpan2git = CPAN2git->new( cpan_dir => $testcpan_dir, repos_dir => $repos_dir );

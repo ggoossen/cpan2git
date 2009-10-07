@@ -28,7 +28,7 @@ use Archive::Extract;
 use CPAN::DistnameInfo;
 use CPAN2git::Constants;
 use Carp qw(confess);
-use DateTime ();
+use DateTime               ();
 use DateTime::Format::Mail ();
 use File::Find;
 use File::Path qw(mkpath rmtree);
@@ -105,12 +105,12 @@ sub _dist_infos_no_cache {
     find(
         sub {
             return if not -f;
-            my $filename = File::Spec->rel2abs($_);
-            my $mtime    = ( stat($filename) )[9];
+            my $filename      = File::Spec->rel2abs($_);
+            my $mtime         = ( stat($filename) )[9];
             my $distname_info = CPAN::DistnameInfo->new($filename);
 
             # skip everything which is not a distribution file, e.g. *.meta files
-            return if not ($distname_info->dist and $distname_info->version);
+            return if not( $distname_info->dist and $distname_info->version );
 
             # skip everything which has not a proper name and might pose a security risk
             return if not $distname_info->dist =~ m/^[\w\d][\w\d.-]*$/;
@@ -172,10 +172,10 @@ sub dist_tagname {
 sub has_gitrev_by_dist {
     my ( $self, $dist ) = @_;
 
-    my $distname = $dist->{distname_info}->dist;
-    my $git_dir = $self->dist_repos_dir($distname) . "/.git";
-    my $no_tag_error_code = 1;
-    my $err      = run_err(
+    my $distname          = $dist->{distname_info}->dist;
+    my $git_dir           = $self->dist_repos_dir($distname) . "/.git";
+    my $no_tag_error_code = 256;
+    my @run_err_args      = (
         "git",
         "--git-dir" => $git_dir,
         "rev-parse",
@@ -183,20 +183,21 @@ sub has_gitrev_by_dist {
         "--verify",
         "refs/tags/" . $self->dist_tagname($dist),
     );
-    if( $err and ( $err != $no_tag_error_code ) ) {
-        confess("Found unexpected error code $no_tag_error_code");
+    my $err = run_err(@run_err_args);
+    if ( $err and ( $err != $no_tag_error_code ) ) {
+        confess( "Found unexpected error code $err for command: " . join( ' ', @run_err_args ) );
     }
 
     return not $err;
 }
 
 sub repos_set_initial_state {
-    my ($self, $distname) = @_;
+    my ( $self, $distname ) = @_;
 
     # reseting git to its initial state, i.e. there is no commit done yet,
     # is done by removing the file containing the current head (which is assumed to be "master").
     my $dist_repos_dir = $self->dist_repos_dir($distname);
-    my $head_ref = "$dist_repos_dir/.git/refs/heads/master";
+    my $head_ref       = "$dist_repos_dir/.git/refs/heads/master";
     if ( -e $head_ref ) {
         unlink("$dist_repos_dir/.git/refs/heads/master") or confess("Failed to unlink: $!");
     }
@@ -207,7 +208,7 @@ sub repos_set_initial_state {
 sub repos_checkout_dist {
     my ( $self, $dist ) = @_;
 
-    my $dist_repos_dir = $self->dist_repos_dir($dist->{distname_info}->dist);
+    my $dist_repos_dir = $self->dist_repos_dir( $dist->{distname_info}->dist );
     run(
         "git",
         "--git-dir" => "$dist_repos_dir/.git",
@@ -266,7 +267,7 @@ sub extract_to_repos {
             File::Spec->rel2abs( $ae->extract_path ),
           )
         {
-            if (-d $try) {
+            if ( -d $try ) {
                 $dir = $try;
                 last;
             }
@@ -283,18 +284,20 @@ sub extract_to_repos {
 }
 
 sub whois {
-    my  ($self) = @_;
+    my ($self) = @_;
     return $self->{whois} if $self->{whois};
 
-    open( my $fh,  "<", $self->cpan_dir . "/authors/00whois.xml" ) or confess("Could not open whois file: $!");
-    $self->{whois} = Parse::CPAN::Whois->new( $fh );
+    open( my $fh, "<", $self->cpan_dir . "/authors/00whois.xml" )
+      or confess("Could not open whois file: $!");
+    $self->{whois} = Parse::CPAN::Whois->new($fh);
 
     return $self->{whois};
 }
 
 sub cpan_whois_author {
-    my ($self, $pause_id) = @_;
-    my $author = $self->whois->author($pause_id) or confess("Could not find author for pause id $pause_id");
+    my ( $self, $pause_id ) = @_;
+    my $author = $self->whois->author($pause_id)
+      or confess("Could not find author for pause id $pause_id");
     return $author;
 }
 
@@ -311,15 +314,18 @@ sub commit_to_repos {
     run( "git", "add", "--force", "--all", "./" );
 
     my $pause_id = $dist->{distname_info}->cpanid;
-    my $author = $self->cpan_whois_author($pause_id);
-    $ENV{GIT_AUTHOR_NAME} = $author->name || $pause_id;
+    my $author   = $self->cpan_whois_author($pause_id);
+    $ENV{GIT_AUTHOR_NAME}  = $author->name  || $pause_id;
     $ENV{GIT_AUTHOR_EMAIL} = $author->email || lc($pause_id) . '@cpan.org';
-    $ENV{GIT_AUTHOR_DATE} = DateTime::Format::Mail->new->format_datetime(
+    $ENV{GIT_AUTHOR_DATE} =
+      DateTime::Format::Mail->new->format_datetime(
         DateTime->from_epoch( epoch => $dist->{mtime}, time_zone => 'UTC' ) );
-    $ENV{GIT_COMMITTER_NAME} = 'CPAN2git ' . $VERSION;
+    $ENV{GIT_COMMITTER_NAME}  = 'CPAN2git ' . $VERSION;
     $ENV{GIT_COMMITTER_EMAIL} = 'cpan2git@localhost';
 
-    run( "git", "commit", "-m" => "release $dist_versioned_name\n\ncpan2git import of release $dist_versioned_name\n" );
+    run( "git", "commit",
+        "-m" =>
+          "release $dist_versioned_name\n\ncpan2git import of release $dist_versioned_name\n" );
 
     run(
         "git",
@@ -349,9 +355,10 @@ sub update_dist {
     for my $dist_info (@dist_infos) {
         next if $self->has_gitrev_by_dist($dist_info);
         if ($prev_dist_info) {
-            $self->repos_checkout_dist( $prev_dist_info );
-        } else {
-            $self->repos_set_initial_state( $distname );
+            $self->repos_checkout_dist($prev_dist_info);
+        }
+        else {
+            $self->repos_set_initial_state($distname);
         }
         $self->clean_repos_dir($dist_info);
         $self->extract_to_repos($dist_info);
