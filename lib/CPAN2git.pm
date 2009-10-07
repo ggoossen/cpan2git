@@ -138,11 +138,20 @@ sub dist_names {
     return uniq map { $_->{distname_info}->dist } $self->dist_infos;
 }
 
+sub _dist_name_x_distinfos {
+    my ($self) = @_;
+    return $self->{dist_name_x_distinfos} if $self->{dist_name_x_distinfos};
+    for my $dist ($self->dist_infos()) {
+        push @{ $self->{dist_name_x_distinfos}->{ $dist->{distname_info}->dist } }, $dist;
+    }
+    return $self->{dist_name_x_distinfos};
+}
+
 sub ordered_dist_infos_by_distname {
     my ( $self, $distname ) = @_;
     my @dist_infos =
       sort { $a->{mtime} <=> $b->{mtime} }
-      grep { $_->{distname_info}->dist eq $distname } $self->dist_infos;
+        @{ $self->_dist_name_x_distinfos()->{$distname} || [] };
 
     return @dist_infos;
 }
