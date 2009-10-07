@@ -110,7 +110,7 @@ sub _dist_infos_no_cache {
             my $distname_info = CPAN::DistnameInfo->new($filename);
 
             # skip everything which is not a distribution file, e.g. *.meta files
-            return if not $distname_info->dist;
+            return if not ($distname_info->dist and $distname_info->version);
 
             # skip everything which has not a proper name and might pose a security risk
             return if not $distname_info->dist =~ m/^[\w\d][\w\d.-]*$/;
@@ -173,14 +173,19 @@ sub has_gitrev_by_dist {
     my ( $self, $dist ) = @_;
 
     my $distname = $dist->{distname_info}->dist;
+    my $git_dir = $self->dist_repos_dir($distname) . "/.git";
+    my $no_tag_error_code = 1;
     my $err      = run_err(
         "git",
-        "--git_dir" => $self->dist_repos_dir($distname),
+        "--git-dir" => $git_dir,
         "rev-parse",
         "-q",
         "--verify",
         "refs/tags/" . $self->dist_tagname($dist),
     );
+    if( $err and ( $err != $no_tag_error_code ) ) {
+        confess("Found unexpected error code $no_tag_error_code");
+    }
 
     return not $err;
 }

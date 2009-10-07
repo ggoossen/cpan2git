@@ -23,6 +23,9 @@ Prerequisites:
     * Module::Load::Conditional
     * Params::Check
     * Scriptalicious
+    * IO::Uncompress::Bunzip2
+    * Archive::Zip
+    * File::Touch (for the tests)
 
 How to use to get a complete mirror in git repositories:
 
