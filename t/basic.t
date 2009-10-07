@@ -57,7 +57,7 @@ my $testcpan_dir = cwd() . "/t/test-cpan/cpan";
         [ sort @module_names ],
         [
             sort
-              qw[NoDashTest BrokenTarball GitIgnore-Test Locale-PO Decision-Markov Module-DynamicSubModule Plucene-Plugin-Analyzer-MetaphoneAnalyzer]
+              qw[NoChangesBetweenVersions-Test NoDashTest BrokenTarball GitIgnore-Test Locale-PO Decision-Markov Module-DynamicSubModule Plucene-Plugin-Analyzer-MetaphoneAnalyzer]
         ]
     );
 }

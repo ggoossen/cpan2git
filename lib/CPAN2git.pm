@@ -276,6 +276,9 @@ sub extract_to_repos {
             File::Spec->rel2abs(
                 File::Spec->catdir( $ae->extract_path, $dist->{distname_info}->distvname )
             ),
+            File::Spec->rel2abs(
+                File::Spec->catdir( $ae->extract_path, $dist->{full_distname} )
+            ),
             File::Spec->rel2abs( $ae->extract_path ),
           )
         {
@@ -338,8 +341,9 @@ sub commit_to_repos {
     $ENV{GIT_COMMITTER_EMAIL} = 'cpan2git@localhost';
 
     run( "git", "commit",
-        "-m" =>
-          "release $dist_versioned_name\n\ncpan2git import of release $dist_versioned_name\n" );
+         "--allow-empty",
+         "-m" =>
+           "release $dist_versioned_name\n\ncpan2git import of release $dist_versioned_name\n" );
 
     run(
         "git",
