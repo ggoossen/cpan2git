@@ -23,4 +23,9 @@
   <type>author</type>
   <fullname></fullname>
  </cpanid>
+ <cpanid>
+  <id>TESTUTF8</id>
+  <type>author</type>
+  <fullname>Tëst UTF-8 ☺</fullname>
+ </cpanid>
 </cpan-whois>
