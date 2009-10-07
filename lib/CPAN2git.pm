@@ -114,7 +114,7 @@ sub _dist_infos_no_cache {
 
             if ( not ( defined $distname_info->version
                          and $distname_info->version ne "" ) ) {
-                say("Skipping '$filename' because it does not have a version.");
+                mutter("Skipping '$filename' because it does not have a version.");
                 return;
             }
 
