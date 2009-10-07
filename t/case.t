@@ -14,6 +14,7 @@ running "update_all" in between.
 use lib 't/lib';
 use Test::CPAN2git;
 
+use Carp qw(confess);
 use CPAN2git;
 use Cwd qw(cwd);
 use File::Path qw(mkpath);
@@ -23,8 +24,6 @@ use Scriptalicious;
 use Test::More;
 
 plan('no_plan');
-
-$Scriptalicious::VERBOSE = -1;
 
 my $testcpan_dir = cwd() . "/t/test-cpan/cpan";
 
@@ -47,7 +46,7 @@ my $testcpan_dir = cwd() . "/t/test-cpan/cpan";
 
     $cpan2git->update_all();
 
-    chdir("$distrepos");
+    chdir("$distrepos") or confess("chdir failed: $!");
 
     is( `git tag -l`, "$module_name-1.0\n$module_name-1.01\n$module_name-1.02\n" );
 
@@ -200,6 +199,4 @@ sub check_plucene_plugin_etc_1_01 {
 EOT
 }
 
-END {
-    chdir("/"); # get away from temporary directory
-}
+1;

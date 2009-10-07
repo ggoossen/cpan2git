@@ -318,7 +318,7 @@ sub commit_to_repos {
     my $distname       = $dist->{distname_info}->dist;
     my $dist_repos_dir = $self->dist_repos_dir($distname);
 
-    my $dist_versioned_name = $dist->{distname_info}->distvname;
+    my $dist_versioned_name = $distname . "-" . $dist->{distname_info}->version;
 
     chdir("$dist_repos_dir") or confess("Failed changing to repos dir: $!");
 

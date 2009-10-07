@@ -4,18 +4,18 @@ use warnings;
 
 =head1 DESCRIPTION
 
-Test to check that a broken tarball is properly ignored.
+Test to check that files with the module name directly concatenated with version makes a tag with a version with a dash.
 
 =cut
 
 use lib 't/lib';
-use Test::CPAN2git;
 
-use Test::More;
-use File::Temp qw(tempdir);
 use CPAN2git;
+use Carp qw(confess);
 use Cwd qw(cwd);
-use Scriptalicious;
+use File::Temp qw(tempdir);
+use Test::CPAN2git;
+use Test::More;
 
 plan('no_plan');
 
@@ -26,14 +26,14 @@ my $testcpan_dir = cwd() . "/t/test-cpan/cpan";
     my $repos_dir = tempdir( CLEANUP => 1 );
     my $cpan2git = CPAN2git->new( cpan_dir => $testcpan_dir, repos_dir => $repos_dir );
 
-    my $module_name = "Broken-Tarball";
+    $cpan2git->update_all();
 
-    $cpan2git->update_dist($module_name);
-
+    my $module_name = "NoDashTest";
     my $distrepos   = $cpan2git->dist_repos_dir($module_name);
 
-    ok( (not -d $distrepos), "Repository is not created");
+    chdir("$distrepos") or confess("could not change dir: $!");
+
+    ok( git_tree_sha("refs/tags/$module_name-1.0") );
 }
 
 1;
-

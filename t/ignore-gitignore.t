@@ -11,14 +11,13 @@ Test to check that .gitignore files inside a distribution are ignore by the CPAN
 use lib 't/lib';
 use Test::CPAN2git;
 
+use Carp qw(confess);
 use Test::More;
 use File::Temp qw(tempdir);
 use CPAN2git;
 use Cwd qw(cwd);
 
 plan('no_plan');
-
-$Scriptalicious::VERBOSE = -1;
 
 # $testcpan_dir referes to a mini CPAN distribution, containing some distributions for testing.
 my $testcpan_dir = cwd() . "/t/test-cpan/cpan";
@@ -32,7 +31,7 @@ my $testcpan_dir = cwd() . "/t/test-cpan/cpan";
     my $module_name = "GitIgnore-Test";
     my $distrepos   = $cpan2git->dist_repos_dir($module_name);
 
-    chdir("$distrepos");
+    chdir("$distrepos") or confess("chdir failed: $!");
 
     my $tree_sha = git_tree_sha("refs/tags/$module_name-1.0");
 
@@ -41,8 +40,4 @@ my $testcpan_dir = cwd() . "/t/test-cpan/cpan";
 100644 blob dd6d86a43dc9aadd55edad1dc23f6bf16a1e2ccf	test
 EOT
 
-}
-
-END {
-    chdir("/"); # get away from temporary directory
 }

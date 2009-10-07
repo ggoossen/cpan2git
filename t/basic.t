@@ -95,6 +95,4 @@ my $testcpan_dir = cwd() . "/t/test-cpan/cpan";
     ok( -d "$repos_dir/$module_name/.git", "$module_name has .git directory" );
 }
 
-END {
-    chdir("/"); # get away from temporary directory
-}
+1;
