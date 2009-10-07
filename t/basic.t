@@ -13,6 +13,8 @@ use Scriptalicious;
 use Test::CPAN2git qw(set_mtime);
 use Test::More 'no_plan';
 
+$Scriptalicious::VERBOSE = -1;
+
 # $testcpan_dir referes to a mini CPAN distribution, containing some distributions for testing.
 my $testcpan_dir = cwd() . "/t/test-cpan/cpan";
 
@@ -57,7 +59,7 @@ my $testcpan_dir = cwd() . "/t/test-cpan/cpan";
         [ sort @dist_names ],
         [
             sort
-              qw[GitIgnore-Test Locale-PO Decision-Markov Module-DynamicSubModule Plucene-Plugin-Analyzer-MetaphoneAnalyzer]
+              qw[BrokenTarball GitIgnore-Test Locale-PO Decision-Markov Module-DynamicSubModule Plucene-Plugin-Analyzer-MetaphoneAnalyzer]
         ]
     );
 }

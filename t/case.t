@@ -24,6 +24,8 @@ use Test::More;
 
 plan('no_plan');
 
+$Scriptalicious::VERBOSE = -1;
+
 my $testcpan_dir = cwd() . "/t/test-cpan/cpan";
 
 {

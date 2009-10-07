@@ -174,6 +174,9 @@ sub has_gitrev_by_dist {
 
     my $distname          = $dist->{distname_info}->dist;
     my $git_dir           = $self->dist_repos_dir($distname) . "/.git";
+    if (not -d $git_dir) {
+        return 0;
+    }
     my $no_tag_error_code = 256;
     my @run_err_args      = (
         "git",
@@ -193,6 +196,10 @@ sub has_gitrev_by_dist {
 
 sub repos_set_initial_state {
     my ( $self, $distname ) = @_;
+
+    if ( not $self->dist_has_repository($distname) ) {
+        $self->create_dist_repository($distname);
+    }
 
     # reseting git to its initial state, i.e. there is no commit done yet,
     # is done by removing the file containing the current head (which is assumed to be "master").
@@ -253,8 +260,12 @@ sub extract_to_repos {
     my $dist_repos_dir = $self->dist_repos_dir($distname);
 
     my $ae = Archive::Extract->new( archive => $dist->{filename} );
+    local $Archive::Extract::WARN = $VERBOSE >= 0;
     my $extract_dir = tempdir( CLEANUP => 1 );
     $ae->extract( to => $extract_dir );
+    if ( $ae->error() ) {
+        return 1;
+    }
 
     my $dir;
     {
@@ -280,7 +291,7 @@ sub extract_to_repos {
         run( "mv", "$dir/$filename", "$dist_repos_dir/$filename" );
     }
 
-    return;
+    return 0;
 }
 
 sub whois {
@@ -336,6 +347,23 @@ sub commit_to_repos {
     return;
 }
 
+sub _update_dist {
+    my ( $self, $dist_info, $prev_dist_info ) = @_;
+
+    if ($prev_dist_info) {
+        $self->repos_checkout_dist($prev_dist_info);
+    }
+    else {
+        $self->repos_set_initial_state($dist_info->{distname_info}->dist);
+    }
+    $self->clean_repos_dir($dist_info);
+    if ($self->extract_to_repos($dist_info) ) {
+        return $prev_dist_info;
+    }
+    $self->commit_to_repos($dist_info);
+    return $dist_info;
+}
+
 =item update_dist( $dist_name )
 
 Update a single distribution to its corresponding git repository.
@@ -349,25 +377,13 @@ sub update_dist {
 
     my @dist_infos = $self->ordered_dist_infos_by_distname($distname);
 
-    if ( not $self->dist_has_repository($distname) ) {
-        $self->create_dist_repository($distname);
-    }
-
     my $prev_dist_info;
     for my $dist_info (@dist_infos) {
-        next if $self->has_gitrev_by_dist($dist_info);
-        if ($prev_dist_info) {
-            $self->repos_checkout_dist($prev_dist_info);
+        if ($self->has_gitrev_by_dist($dist_info)) {
+            $prev_dist_info = $dist_info;
+            next;
         }
-        else {
-            $self->repos_set_initial_state($distname);
-        }
-        $self->clean_repos_dir($dist_info);
-        $self->extract_to_repos($dist_info);
-        $self->commit_to_repos($dist_info);
-    }
-    continue {
-        $prev_dist_info = $dist_info;
+        $prev_dist_info = $self->_update_dist($dist_info, $prev_dist_info);
     }
 
     return;
