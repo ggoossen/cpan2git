@@ -260,10 +260,11 @@ sub extract_to_repos {
     my $dist_repos_dir = $self->dist_repos_dir($distname);
 
     my $ae = Archive::Extract->new( archive => $dist->{filename} );
-    local $Archive::Extract::WARN = $VERBOSE >= 0;
+    local $Archive::Extract::WARN = $VERBOSE > 0;
     my $extract_dir = tempdir( CLEANUP => 1 );
     $ae->extract( to => $extract_dir );
     if ( $ae->error() ) {
+        say("Failed extracting '$dist->{filename}'.");
         return 1;
     }
 
