@@ -162,6 +162,8 @@ sub create_dist_repository {
 
     mkpath( $self->dist_repos_dir($distname) );
 
+    say("Creating repository for '$distname'");
+
     run( "git", "--git-dir" => $self->dist_repos_dir($distname) . "/.git", "init" );
 
     return;
@@ -318,6 +320,8 @@ sub commit_to_repos {
 
     my $dist_versioned_name = $dist->{full_distname};
 
+    say("Importing release '$dist_versioned_name'");
+
     chdir("$dist_repos_dir") or confess("Failed changing to repos dir: $!");
 
     run( "git", "add", "--force", "--all", "./" );
@@ -342,6 +346,7 @@ sub commit_to_repos {
         "-m" => "cpan2git tag of release $dist_versioned_name",
         "-a" => $dist_versioned_name,
     );
+
     return;
 }
 
