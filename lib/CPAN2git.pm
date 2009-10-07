@@ -110,12 +110,31 @@ sub _dist_infos_no_cache {
             my $distname_info = CPAN::DistnameInfo->new($filename);
 
             # skip everything which is not a distribution file, e.g. *.meta files
-            return if not( $distname_info->dist and $distname_info->version );
+            return if not $distname_info->dist;
 
-            # skip everything which has not a proper name and might pose a security risk
-            return if not $distname_info->dist =~ m/^[\w\d][\w\d.-]*$/;
+            if ( not ( defined $distname_info->version
+                         and $distname_info->version ne "" ) ) {
+                say("Skipping '$filename' because it does not have a version.");
+                return;
+            }
 
             my $full_distname = $distname_info->dist . "-" . $distname_info->version;
+
+            # skip everything which has not a proper name and might pose a security risk
+            if (not $distname_info->dist =~ m/^[\w\d][\w\d.-]*$/) {
+                say("Skipping dist '$full_distname', because its name is wierd.");
+                return;
+            }
+
+            if (any { $full_distname eq $_ } CPAN2git::Constants::SKIP_DISTS()) {
+                say("Skipping dist '$full_distname', because it is in our list of dists to skip.");
+                return;
+            }
+
+            if ($full_distname =~ m/[.]$/) {
+                say("Skipping dist '$full_distname, because it ends with '.'.");
+                return;
+            }
 
             push(
                 @dist_infos,
@@ -396,10 +415,6 @@ sub update_dist {
 
     my $prev_dist_info;
     for my $dist_info (@dist_infos) {
-        if (any { $dist_info->{full_distname} eq $_ } CPAN2git::Constants::SKIP_DISTS()) {
-            say("Skipping dist '$dist_info->{full_distname}'");
-            next;
-        }
         if ($self->has_gitrev_by_dist($dist_info)) {
             $prev_dist_info = $dist_info;
             next;
