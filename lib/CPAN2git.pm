@@ -287,6 +287,7 @@ sub extract_to_repos {
     my $distname       = $dist->{distname_info}->dist;
     my $dist_repos_dir = $self->dist_repos_dir($distname);
 
+    mutter("Start extracting $dist->{filename}");
     my $ae = Archive::Extract->new( archive => $dist->{filename} );
     local $Archive::Extract::WARN = $VERBOSE > 0;
     my $extract_dir = tempdir( CLEANUP => 1 );
@@ -295,6 +296,7 @@ sub extract_to_repos {
         say("Failed extracting '$dist->{filename}'.");
         return 1;
     }
+    mutter("Extract successful");
 
     my $dir;
     {
