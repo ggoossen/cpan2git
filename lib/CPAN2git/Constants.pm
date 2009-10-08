@@ -10,7 +10,7 @@ List of distributions which have non-readable files.
 =cut
 
 sub DISTS_WITH_NON_READABLE_FILES {
-    return (qw|LWP-UserAgent-ProxyAny-1.02 Audio-Wav-0.03|);
+    return (qw|LWP-UserAgent-ProxyAny-1.02 Audio-Wav-0.03 Test-MockFile-Light-0.2.0|);
 }
 
 =item DISTS_INSECURE_TARBALL
