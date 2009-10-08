@@ -15,6 +15,7 @@ sub DISTS_WITH_NON_READABLE_FILES {
                   Audio-Wav-0.03
                   Test-MockFile-Light-0.2.0
                   WWW-Search-NCBI-PubMed-0.01
+                  Lingua-EN-Nickname-1.15
           ]);
 }
 
