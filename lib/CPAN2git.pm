@@ -325,12 +325,13 @@ sub extract_to_repos {
 
     my @to_be_moved_files = _dir_non_dotgit_files($dir);
 
-    for my $filename (@to_be_moved_files) {
-        if ( not -r "$dir/$filename" ) {
-            say("Non-readable file $dir/$filename in dist $dist->{full_distname}");
 
-            return 1;
-        }
+    my $find_output = `find $dir -not -readable`;
+    chomp($find_output);
+    if ( length($find_output) ) {
+        say("Non-readable file(s) in dist $dist->{full_distname}:\n$find_output\n");
+
+        return 1;
     }
 
     for my $filename (@to_be_moved_files) {
@@ -407,6 +408,7 @@ sub _update_dist {
     }
     $self->clean_repos_dir($dist_info);
     if ( $self->extract_to_repos($dist_info) ) {
+        say("Failed to extract $dist_info->{full_distname}; skipping.");
         return $prev_dist_info;
     }
     $self->commit_to_repos($dist_info);

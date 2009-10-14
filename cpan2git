@@ -60,7 +60,7 @@ sub get_options {
         "all"         => \$all,
         "cpan-dir=s"  => \$cpan_dir,
         "repos-dir=s" => \$repos_dir,
-        "dist-name=s" => \$dist_name
+        "dist-name=s@" => \$dist_name
     );
 
     my @parse_spec = ( {
@@ -127,7 +127,9 @@ sub update_single_dist {
         cpan_dir  => $options{cpan_dir},
         repos_dir => $options{repos_dir},
     );
-    $cpan2git->update_dist( $options{dist_name} );
+    for my $dist_name ( @{ $options{dist_name} } ) {
+        $cpan2git->update_dist( $dist_name );
+    }
 
     return;
 }
