@@ -329,7 +329,7 @@ sub extract_to_repos {
     my $find_output = `find $dir -not -readable`;
     chomp($find_output);
     if ( length($find_output) ) {
-        say("Non-readable file(s) in dist $dist->{full_distname}:\n$find_output\n");
+        say("Non-readable file(s) in dist $dist->{full_distname}:\n$find_output");
 
         return 1;
     }
