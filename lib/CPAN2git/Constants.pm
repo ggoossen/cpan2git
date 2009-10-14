@@ -16,6 +16,7 @@ sub DISTS_WITH_NON_READABLE_FILES {
                   Test-MockFile-Light-0.2.0
                   WWW-Search-NCBI-PubMed-0.01
                   Lingua-EN-Nickname-1.15
+		  openStatisticalServices-0.015
           ]);
 }
 
