@@ -17,6 +17,7 @@ sub DISTS_WITH_NON_READABLE_FILES {
                   WWW-Search-NCBI-PubMed-0.01
                   Lingua-EN-Nickname-1.15
 		  openStatisticalServices-0.015
+		  openStatisticalServices-0.016
           ]);
 }
 
