@@ -18,6 +18,9 @@ sub DISTS_WITH_NON_READABLE_FILES {
                   Lingua-EN-Nickname-1.15
 		  openStatisticalServices-0.015
 		  openStatisticalServices-0.016
+		  openStatisticalServices-0.017
+		  openStatisticalServices-0.018
+		  openStatisticalServices-0.019
           ]);
 }
 
