@@ -112,8 +112,11 @@ sub _dist_infos_no_cache {
             # skip everything which is not a distribution file, e.g. *.meta files
             return if not $distname_info->dist;
 
-            if ( not ( defined $distname_info->version
-                         and $distname_info->version ne "" ) ) {
+            if (
+                not( defined $distname_info->version
+                    and $distname_info->version ne "" )
+              )
+            {
                 mutter("Skipping '$filename' because it does not have a version.");
                 return;
             }
@@ -121,17 +124,18 @@ sub _dist_infos_no_cache {
             my $full_distname = $distname_info->dist . "-" . $distname_info->version;
 
             # skip everything which has not a proper name and might pose a security risk
-            if (not $distname_info->dist =~ m/^[\w\d][\w\d.-]*$/) {
+            if ( not $distname_info->dist =~ m/^[\w\d][\w\d.-]*$/ ) {
                 say("Skipping dist '$full_distname', because its name is wierd.");
                 return;
             }
 
-            if (any { $full_distname eq $_ } CPAN2git::Constants::SKIP_DISTS()) {
-                say("Skipping dist '$full_distname', because it is in our list of dists to skip.");
+            if ( any { $full_distname eq $_ } CPAN2git::Constants::SKIP_DISTS() ) {
+                say("Skipping dist '$full_distname', because it is in our list of dists to skip."
+                );
                 return;
             }
 
-            if ($full_distname =~ m/[.]$/) {
+            if ( $full_distname =~ m/[.]$/ ) {
                 say("Skipping dist '$full_distname, because it ends with '.'.");
                 return;
             }
@@ -160,7 +164,7 @@ sub dist_names {
 sub _dist_name_x_distinfos {
     my ($self) = @_;
     return $self->{dist_name_x_distinfos} if $self->{dist_name_x_distinfos};
-    for my $dist ($self->dist_infos()) {
+    for my $dist ( $self->dist_infos() ) {
         push @{ $self->{dist_name_x_distinfos}->{ $dist->{distname_info}->dist } }, $dist;
     }
     return $self->{dist_name_x_distinfos};
@@ -170,7 +174,7 @@ sub ordered_dist_infos_by_distname {
     my ( $self, $distname ) = @_;
     my @dist_infos =
       sort { $a->{mtime} <=> $b->{mtime} }
-        @{ $self->_dist_name_x_distinfos()->{$distname} || [] };
+      @{ $self->_dist_name_x_distinfos()->{$distname} || [] };
 
     return @dist_infos;
 }
@@ -200,9 +204,9 @@ sub create_dist_repository {
 sub has_gitrev_by_dist {
     my ( $self, $dist ) = @_;
 
-    my $distname          = $dist->{distname_info}->dist;
-    my $git_dir           = $self->dist_repos_dir($distname) . "/.git";
-    if (not -d $git_dir) {
+    my $distname = $dist->{distname_info}->dist;
+    my $git_dir  = $self->dist_repos_dir($distname) . "/.git";
+    if ( not -d $git_dir ) {
         return 0;
     }
     my $no_tag_error_code = 256;
@@ -322,6 +326,14 @@ sub extract_to_repos {
     my @to_be_moved_files = _dir_non_dotgit_files($dir);
 
     for my $filename (@to_be_moved_files) {
+        if ( not -r "$dir/$filename" ) {
+            say("Non-readable file $dir/$filename in dist $dist->{full_distname}");
+
+            return 1;
+        }
+    }
+
+    for my $filename (@to_be_moved_files) {
         run( "mv", "$dir/$filename", "$dist_repos_dir/$filename" );
     }
 
@@ -370,10 +382,9 @@ sub commit_to_repos {
     $ENV{GIT_COMMITTER_NAME}  = 'CPAN2git ' . $VERSION;
     $ENV{GIT_COMMITTER_EMAIL} = 'cpan2git@localhost';
 
-    run( "git", "commit",
-         "--allow-empty",
-         "-m" =>
-           "release $dist_versioned_name\n\ncpan2git import of release $dist_versioned_name\n" );
+    run( "git", "commit", "--allow-empty",
+        "-m" =>
+          "release $dist_versioned_name\n\ncpan2git import of release $dist_versioned_name\n" );
 
     run(
         "git",
@@ -392,10 +403,10 @@ sub _update_dist {
         $self->repos_checkout_dist($prev_dist_info);
     }
     else {
-        $self->repos_set_initial_state($dist_info->{distname_info}->dist);
+        $self->repos_set_initial_state( $dist_info->{distname_info}->dist );
     }
     $self->clean_repos_dir($dist_info);
-    if ($self->extract_to_repos($dist_info) ) {
+    if ( $self->extract_to_repos($dist_info) ) {
         return $prev_dist_info;
     }
     $self->commit_to_repos($dist_info);
@@ -417,11 +428,11 @@ sub update_dist {
 
     my $prev_dist_info;
     for my $dist_info (@dist_infos) {
-        if ($self->has_gitrev_by_dist($dist_info)) {
+        if ( $self->has_gitrev_by_dist($dist_info) ) {
             $prev_dist_info = $dist_info;
             next;
         }
-        $prev_dist_info = $self->_update_dist($dist_info, $prev_dist_info);
+        $prev_dist_info = $self->_update_dist( $dist_info, $prev_dist_info );
     }
 
     return;
