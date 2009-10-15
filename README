@@ -11,6 +11,9 @@ Each version of a module is tagged with the string
 cpan2git also works incrementally. If a new version of a cpan module is
 available, cpan2git will update the corresponding git repository.
 
+System requirements:
+ * 2 Gb of memory (swap is ok), due to some very large CPAN dists.
+
 Prerequisites:
 
  * git (version >= 1.6.3)
