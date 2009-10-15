@@ -55,12 +55,12 @@ sub main_dispatch {
 
 sub get_options {
     my ( $command, %options );
-    my ( $all, $cpan_dir, $repos_dir, $dist_name, $skip_untill_dist );
+    my ( $all, $cpan_dir, $repos_dir, $dist_name, $skip_untill_module );
     getopt(
         "all"         => \$all,
         "cpan-dir=s"  => \$cpan_dir,
         "repos-dir=s" => \$repos_dir,
-        "skip-untill-dist=s" => \$skip_untill_dist,
+        "skip-untill-module=s" => \$skip_untill_module,
         "dist-name=s@" => \$dist_name
     );
 
@@ -84,8 +84,8 @@ sub get_options {
             required => 1,
         },
         {
-            var_ref  => \$skip_untill_dist,
-            option   => 'skip_untill_dist',
+            var_ref  => \$skip_untill_module,
+            option   => 'skip_untill_module',
         },
     );
 
@@ -120,7 +120,7 @@ sub update_all_dists {
         cpan_dir  => $options{cpan_dir},
         repos_dir => $options{repos_dir},
     );
-    $cpan2git->update_all( skip_untill_dist => $options{skip_untill_dist} );
+    $cpan2git->update_all( skip_untill_module => $options{skip_untill_module} );
 
     return;
 }
@@ -157,6 +157,8 @@ usage: cperl2git <option list> <command [arguments]>
     Where <option list> consists of:
         --cpan-dir=<dir> (required, location of local cpan mirror)
         --repos-dir=<dir> (required, location of git repositories)
+        --skip-untill-module=<module-name> (optional for --all, skips modules
+            untill <module-name> is found.
 EOU
 
     return;

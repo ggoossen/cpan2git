@@ -449,13 +449,13 @@ Update all CPAN distributions to their corresponding git repositories.
 sub update_all {
     my ($self, %args) = @_;
 
-    my $skip_untill_dist = $args{skip_untill_dist};
+    my $skip_untill_module = $args{skip_untill_module};
 
     for my $dist_name ( $self->dist_names ) {
-        if( $skip_untill_dist and $dist_name ne $skip_untill_dist ) {
+        if( $skip_untill_module and $dist_name ne $skip_untill_module ) {
             next;
         } else {
-            $skip_untill_dist = 0;
+            $skip_untill_module = 0;
         }
 
         $self->update_dist($dist_name);
