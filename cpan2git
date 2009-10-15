@@ -55,7 +55,7 @@ sub main_dispatch {
 
 sub get_options {
     my ( $command, %options );
-    my ( $all, $cpan_dir, $repos_dir, $dist_name );
+    my ( $all, $cpan_dir, $repos_dir, $dist_name, $skip_untill_dist );
     getopt(
         "all"         => \$all,
         "cpan-dir=s"  => \$cpan_dir,
@@ -81,6 +81,10 @@ sub get_options {
             var_ref  => \$repos_dir,
             option   => 'repos_dir',
             required => 1,
+        },
+        {
+            var_ref  => \$skip_untill_dist,
+            option   => 'skip_untill_dist',
         },
     );
 
@@ -115,7 +119,7 @@ sub update_all_dists {
         cpan_dir  => $options{cpan_dir},
         repos_dir => $options{repos_dir},
     );
-    $cpan2git->update_all();
+    $cpan2git->update_all( skip_untill_dist => $options{skip_untill_dist} );
 
     return;
 }
