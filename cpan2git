@@ -60,6 +60,7 @@ sub get_options {
         "all"         => \$all,
         "cpan-dir=s"  => \$cpan_dir,
         "repos-dir=s" => \$repos_dir,
+        "skip-untill-dist" => \$skip_untill_dist,
         "dist-name=s@" => \$dist_name
     );
 
