@@ -125,7 +125,7 @@ sub _dist_infos_no_cache {
 
             # skip everything which has not a proper name and might pose a security risk
             if ( not $distname_info->dist =~ m/^[\w\d][\w\d.-]*$/ ) {
-                say("Skipping dist '$full_distname', because its name is wierd.");
+                say("Skipping dist '$full_distname', because its name is weird.");
                 return;
             }
 
